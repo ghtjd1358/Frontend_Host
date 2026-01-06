@@ -1,0 +1,29 @@
+{
+  "name": "mfa-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "lib",
+    "host",
+    "remote1",
+    "remote2",
+    "remote3"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n \"remote1,remote2,remote3,host\" -c \"blue,green,yellow,magenta\" \"npm run dev:remote1\" \"npm run dev:remote2\" \"npm run dev:remote3\" \"npm run dev:host\"",
+    "dev:host": "cd host && npm start",
+    "dev:remote1": "cd remote1 && npm start",
+    "dev:remote2": "cd remote2 && npm start",
+    "dev:remote3": "cd remote3 && npm start",
+    "build": "npm run build:lib && npm run build:remote1 && npm run build:remote2 && npm run build:remote3 && npm run build:host",
+    "build:lib": "cd lib && npm run build",
+    "build:host": "cd host && npm run build",
+    "build:remote1": "cd remote1 && npm run build",
+    "build:remote2": "cd remote2 && npm run build",
+    "build:remote3": "cd remote3 && npm run build",
+    "install:all": "npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
