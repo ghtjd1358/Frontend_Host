@@ -39,7 +39,13 @@
       "Bash(git fetch:*)",
       "Bash(git filter-branch:*)",
       "Bash(git reset:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(git commit:*)",
+      "Bash(git branch:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run:*)",
+      "Bash(git submodule:*)",
+      "Bash(git add:*)"
     ]
   }
 }
