@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nrefactor: 컴포넌트 구조 개선 및 기능 업데이트\n\n- 불필요한 버튼/레이아웃 컴포넌트 제거\n- 경험, 기능, 프로젝트 섹션 수정\n- 포트폴리오 데이터 업데이트\n- 새로운 페이지 및 에셋 추가\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git commit -m \"$(cat <<''EOF''\nrefactor: 컴포넌트 구조 개선\n\n- 불필요한 버튼/레이아웃 컴포넌트 제거\n- Root 및 BlogList 페이지 수정\n- webpack 설정 업데이트\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git commit -m \"$(cat <<''EOF''\nrefactor: 컴포넌트 구조 개선\n\n- 불필요한 버튼/레이아웃 컴포넌트 제거\n- App, Root 컴포넌트 수정\n- 스타일 및 webpack 설정 업데이트\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nbuild: 전체 프로젝트 빌드 및 타입 에러 수정\n\n- lib: axios-factory 타입 에러 수정\n- host: ErrorBoundary, LoadingSpinner 업데이트\n- host: webpack 설정 및 Lottie 애니메이션 추가\n- 서브모듈 참조 업데이트 (remote1, remote2, remote3)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n)\")"
+    ]
+  }
+}

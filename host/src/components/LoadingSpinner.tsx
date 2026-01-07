@@ -1,10 +1,15 @@
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import './LoadingSpinner.css';
 
 function LoadingSpinner() {
   return (
     <div className="loading-container">
-      <div className="spinner"></div>
-      <p>로딩 중...</p>
+      <DotLottieReact
+        src="/loading.json"
+        loop
+        autoplay
+        style={{ width: 120, height: 120 }}
+      />
     </div>
   );
 }
