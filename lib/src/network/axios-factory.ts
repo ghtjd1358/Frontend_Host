@@ -42,10 +42,11 @@ export interface ExtendedAxiosError extends AxiosError {
 
 // API 에러 여부 확인
 export function isApiError(error: any): error is ExtendedAxiosError {
+  const data = error.response?.data as ApiErrorResponse | undefined;
   return (
     isAxiosError(error) &&
-    error.response?.data?.code !== undefined &&
-    error.response?.data?.statusCode !== undefined
+    data?.code !== undefined &&
+    data?.statusCode !== undefined
   );
 }
 
@@ -142,10 +143,10 @@ export class AxiosClientFactory {
 
       // 커스텀 요청 핸들러 실행
       if (customRequestHandler) {
-        return customRequestHandler(config as RequestConfig);
+        customRequestHandler(config as RequestConfig);
       }
 
-      return this.defaultRequestHandler(config as RequestConfig);
+      return config;
     });
 
     // 응답 인터셉터

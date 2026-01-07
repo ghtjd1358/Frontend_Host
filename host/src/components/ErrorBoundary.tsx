@@ -1,4 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 interface Props {
   children: ReactNode;
@@ -49,6 +50,12 @@ function ErrorFallback({ error }: { error: Error | null }) {
       textAlign: 'center'
     }}>
       <div>
+        <DotLottieReact
+          src="/error.json"
+          loop
+          autoplay
+          style={{ width: 200, height: 200, margin: '0 auto' }}
+        />
         <h1 style={{ fontSize: '32px', marginBottom: '16px', color: '#1E3A5F' }}>
           오류가 발생했습니다
         </h1>
