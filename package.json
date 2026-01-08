@@ -17,13 +17,14 @@
     "dev:remote3": "cd remote3 && npm start",
     "build": "npm run build:lib && npm run build:remote1 && npm run build:remote2 && npm run build:remote3 && npm run build:host",
     "build:lib": "cd lib && npm run build",
-    "build:host": "cd host && npm run build",
-    "build:remote1": "cd remote1 && npm run build",
-    "build:remote2": "cd remote2 && npm run build",
-    "build:remote3": "cd remote3 && npm run build",
+    "build:host": "cross-env NODE_OPTIONS=--max_old_space_size=4096 npm run build --prefix host",
+    "build:remote1": "cross-env NODE_OPTIONS=--max_old_space_size=4096 npm run build --prefix remote1",
+    "build:remote2": "cross-env NODE_OPTIONS=--max_old_space_size=4096 npm run build --prefix remote2",
+    "build:remote3": "cross-env NODE_OPTIONS=--max_old_space_size=4096 npm run build --prefix remote3",
     "install:all": "npm install"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2"
+    "concurrently": "^9.1.2",
+    "cross-env": "^10.1.0"
   }
 }
