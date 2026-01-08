@@ -10,7 +10,9 @@
       "Bash(git commit -m \"$(cat <<''EOF''\nbuild: 전체 프로젝트 빌드 및 타입 에러 수정\n\n- lib: axios-factory 타입 에러 수정\n- host: ErrorBoundary, LoadingSpinner 업데이트\n- host: webpack 설정 및 Lottie 애니메이션 추가\n- 서브모듈 참조 업데이트 (remote1, remote2, remote3)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(set NODE_OPTIONS=--max_old_space_size=4096)",
       "Bash(npm install:*)",
-      "Bash(git commit -m \"$(cat <<''EOF''\nbuild: 빌드 메모리 옵션 영구 적용\n\n- cross-env 패키지 추가\n- 빌드 스크립트에 NODE_OPTIONS=--max_old_space_size=4096 옵션 적용\n- OOM 에러(exit code 137) 해결\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n)\")"
+      "Bash(git commit -m \"$(cat <<''EOF''\nbuild: 빌드 메모리 옵션 영구 적용\n\n- cross-env 패키지 추가\n- 빌드 스크립트에 NODE_OPTIONS=--max_old_space_size=4096 옵션 적용\n- OOM 에러(exit code 137) 해결\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git commit -m \"$(cat <<''EOF''\nbuild: Vercel 빌드 메모리 옵션 추가\n\n- NODE_OPTIONS=--max_old_space_size=4096 옵션 적용\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git commit -m \"$(cat <<''EOF''\nbuild: 각 프로젝트 Vercel 빌드 메모리 옵션 추가\n\n- host, remote1, remote2, remote3 빌드 스크립트에 NODE_OPTIONS 적용\n- Vercel 배포시 OOM 에러 해결\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n)\")"
     ]
   }
 }
