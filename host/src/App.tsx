@@ -1,9 +1,19 @@
+/**
+ * App Component - KOMCA 패턴
+ * Host 앱 메인 컴포넌트
+ */
+
 import { Suspense, lazy } from 'react';
 import { Routes, Route, NavLink } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RoutePath } from '@/routes/paths';
 import { selectUser, selectIsAuthenticated, logout, RootState } from '@/store';
-import ErrorBoundary from '@/components/ErrorBoundary';
+import {
+  ErrorBoundary,
+  GlobalLoading,
+  ToastContainer,
+  ModalContainer,
+} from '@mfa/lib';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Login from '@/pages/Login';
 import '@/App.css';
@@ -24,6 +34,11 @@ const App = () => {
 
   return (
     <ErrorBoundary>
+      {/* Global Components - KOMCA 패턴 */}
+      <ToastContainer position="top-right" />
+      <ModalContainer />
+      <GlobalLoading />
+
       <div className="app-container">
         {/* Top Navigation */}
         <nav className="nav">
