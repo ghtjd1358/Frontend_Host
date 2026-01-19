@@ -40,3 +40,4 @@ yarn-error.log*
 # Coverage
 coverage/
 */coverage/
+lib/.npmrc
