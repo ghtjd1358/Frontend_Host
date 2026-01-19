@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "WebFetch(domain:inpa.tistory.com)"
+      "WebFetch(domain:inpa.tistory.com)",
+      "Skill(frontend-design)"
     ]
   }
 }

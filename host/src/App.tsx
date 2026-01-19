@@ -6,7 +6,7 @@
 import { Suspense, lazy } from 'react';
 import { Routes, Route, NavLink } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { RoutePath } from '@/routes/paths';
+import { RoutePath, NavPath } from '@/routes/paths';
 import { selectUser, selectIsAuthenticated, logout, RootState } from '@/store';
 import {
   ErrorBoundary,
@@ -61,19 +61,19 @@ const App = () => {
             </svg>
           </div>
           <div className="nav-links">
-            <NavLink to={RoutePath.Home} end className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <NavLink to={NavPath.Home} end className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
               이력서
             </NavLink>
-            <NavLink to={RoutePath.Blog} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <NavLink to={NavPath.Blog} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
               블로그
             </NavLink>
-            <NavLink to={RoutePath.Portfolio} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <NavLink to={NavPath.Portfolio} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
               포트폴리오
             </NavLink>
 
             {/* 로그인/로그아웃 */}
             {!isAuthenticated ? (
-              <NavLink to={RoutePath.Login} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+              <NavLink to={NavPath.Login} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
                 로그인
               </NavLink>
             ) : (
