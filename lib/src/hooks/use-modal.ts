@@ -5,8 +5,8 @@
 
 import { useCallback, useState } from 'react';
 
-// 모달 옵션
-export interface ModalOptions {
+// 모달 옵션 (Hook용)
+export interface SimpleModalOptions {
   title?: string;
   message: string;
   confirmText?: string;
@@ -16,16 +16,16 @@ export interface ModalOptions {
 // Alert 모달 결과
 export interface AlertModalResult {
   isOpen: boolean;
-  options: ModalOptions | null;
-  show: (options: ModalOptions | string) => Promise<void>;
+  options: SimpleModalOptions | null;
+  show: (options: SimpleModalOptions | string) => Promise<void>;
   close: () => void;
 }
 
 // Confirm 모달 결과
 export interface ConfirmModalResult {
   isOpen: boolean;
-  options: ModalOptions | null;
-  show: (options: ModalOptions | string) => Promise<boolean>;
+  options: SimpleModalOptions | null;
+  show: (options: SimpleModalOptions | string) => Promise<boolean>;
   close: (confirmed: boolean) => void;
 }
 
@@ -34,11 +34,11 @@ export interface ConfirmModalResult {
  */
 export function useAlertModal(): AlertModalResult {
   const [isOpen, setIsOpen] = useState(false);
-  const [options, setOptions] = useState<ModalOptions | null>(null);
+  const [options, setOptions] = useState<SimpleModalOptions | null>(null);
   const [resolver, setResolver] = useState<(() => void) | null>(null);
 
-  const show = useCallback((opts: ModalOptions | string): Promise<void> => {
-    const modalOptions: ModalOptions = typeof opts === 'string'
+  const show = useCallback((opts: SimpleModalOptions | string): Promise<void> => {
+    const modalOptions: SimpleModalOptions = typeof opts === 'string'
       ? { message: opts }
       : opts;
 
@@ -67,11 +67,11 @@ export function useAlertModal(): AlertModalResult {
  */
 export function useConfirmModal(): ConfirmModalResult {
   const [isOpen, setIsOpen] = useState(false);
-  const [options, setOptions] = useState<ModalOptions | null>(null);
+  const [options, setOptions] = useState<SimpleModalOptions | null>(null);
   const [resolver, setResolver] = useState<((value: boolean) => void) | null>(null);
 
-  const show = useCallback((opts: ModalOptions | string): Promise<boolean> => {
-    const modalOptions: ModalOptions = typeof opts === 'string'
+  const show = useCallback((opts: SimpleModalOptions | string): Promise<boolean> => {
+    const modalOptions: SimpleModalOptions = typeof opts === 'string'
       ? { message: opts, confirmText: '확인', cancelText: '취소' }
       : { confirmText: '확인', cancelText: '취소', ...opts };
 

@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { storage, RecentMenu as LibRecentMenu, ServiceType } from '@mfa/lib';
+import { storage, RecentMenu as LibRecentMenu, ServiceType } from '@sonhoseong/mfa-lib';
 
 /**
  * 최근 메뉴 (탭) 관리 - KOMCA 패턴 적용

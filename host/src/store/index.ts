@@ -2,7 +2,7 @@ import { configureStore, combineReducers, Reducer } from '@reduxjs/toolkit';
 import { appSlice } from './app';
 import { recentMenuSlice } from './recent-menu';
 import { menuSlice } from './menu';
-import { storage } from '@mfa/lib';
+import { storage } from '@sonhoseong/mfa-lib';
 
 /**
  * Redux Store - KOMCA 패턴 적용

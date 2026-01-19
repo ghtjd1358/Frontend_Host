@@ -27,5 +27,8 @@
   "devDependencies": {
     "concurrently": "^9.1.2",
     "cross-env": "^10.1.0"
+  },
+  "dependencies": {
+    "@sonhoseong/mfa-lib": "^1.1.1"
   }
 }

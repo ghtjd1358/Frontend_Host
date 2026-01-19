@@ -4,7 +4,7 @@
  */
 
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { MenuItem } from '@mfa/lib';
+import { MenuItem } from '@sonhoseong/mfa-lib';
 
 interface MenuState {
   menuList: MenuItem[];

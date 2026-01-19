@@ -13,10 +13,10 @@ import {
   GlobalLoading,
   ToastContainer,
   ModalContainer,
-} from '@mfa/lib';
+} from '@sonhoseong/mfa-lib';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Login from '@/pages/Login';
-import '@/App.css';
+import '@/styles/App.css';
 
 // Remote 앱들 lazy 로드
 const ResumeApp = lazy(() => import('@resume/App'));

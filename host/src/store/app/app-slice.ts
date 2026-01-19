@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { storage, User, ServiceType, AppState } from '@mfa/lib';
+import { storage, User, ServiceType, AppState } from '@sonhoseong/mfa-lib';
 
 // Re-export types for backwards compatibility
 export type { User, ServiceType };
