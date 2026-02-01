@@ -18,7 +18,7 @@ const staticReducers = {
 };
 
 // 동적 Reducer 저장소
-let dynamicReducers: Record<string, Reducer> = {};
+const dynamicReducers: Record<string, Reducer> = {};
 
 // Root Reducer 생성
 const createRootReducer = () => combineReducers({
@@ -37,9 +37,9 @@ export const store = configureStore({
 
 // 호스트 앱 판별 및 전역 Store 노출
 const isHostApp = () => {
-    // 개발 환경: 포트로 판별
+    // 개발 환경: 포트로 판별 (Host는 5000번 포트)
     if (process.env.NODE_ENV === 'development') {
-        return window.location.port === '3000';
+        return window.location.port === '5000';
     }
     // 프로덕션: sessionStorage로 판별
     return storage.isHostApp();
@@ -82,12 +82,7 @@ export const removeReducer = (key: string) => {
     store.replaceReducer(createRootReducer());
 };
 
-// 타입 선언
-declare global {
-    interface Window {
-        __REDUX_STORE__: typeof store;
-    }
-}
+// Window.__REDUX_STORE__ 타입은 @sonhoseong/mfa-lib에서 선언됨
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

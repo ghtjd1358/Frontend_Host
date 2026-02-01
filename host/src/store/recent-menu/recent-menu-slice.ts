@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { storage, RecentMenu as LibRecentMenu, ServiceType } from '@sonhoseong/mfa-lib';
+import { storage, ServiceType } from '@sonhoseong/mfa-lib';
 
 /**
  * 최근 메뉴 (탭) 관리 - KOMCA 패턴 적용
@@ -21,10 +21,10 @@ type RecentMenuState = {
 };
 
 const loadInitialState = (): RecentMenuState => {
-    const savedList = storage.getRecentMenu<RecentMenu>();
+    const savedList = storage.getRecentMenu() as RecentMenu[];
     return {
-        list: savedList,
-        currentId: savedList.length > 0 ? savedList[0].id : '',
+        list: savedList || [],
+        currentId: savedList && savedList.length > 0 ? savedList[0].id : '',
     };
 };
 

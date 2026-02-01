@@ -1,16 +1,23 @@
-// Remote Module 타입 선언
+/**
+ * Remote Module 타입 선언
+ * Module Federation으로 로드되는 Remote 앱 타입 정의
+ */
+
 declare module '@resume/App' {
-  const App: React.ComponentType;
+  import { ComponentType } from 'react';
+  const App: ComponentType<Record<string, never>>;
   export default App;
 }
 
 declare module '@blog/App' {
-  const App: React.ComponentType;
+  import { ComponentType } from 'react';
+  const App: ComponentType<Record<string, never>>;
   export default App;
 }
 
 declare module '@portfolio/App' {
-  const App: React.ComponentType;
+  import { ComponentType } from 'react';
+  const App: ComponentType<Record<string, never>>;
   export default App;
 }
 

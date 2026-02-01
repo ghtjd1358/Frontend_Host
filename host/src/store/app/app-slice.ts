@@ -7,7 +7,7 @@ export type { User, ServiceType };
 // localStorage에서 초기 상태 로드
 const loadInitialState = (): AppState => {
     const accessToken = storage.getAccessToken();
-    const savedUser = storage.getUser<User>();
+    const savedUser = storage.getUser() as User | null;
 
     return {
         accessToken,

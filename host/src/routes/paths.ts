@@ -8,7 +8,7 @@ export enum NavPath {
 
 // Route용 경로 (Routes에서 사용, 와일드카드 포함)
 export enum RoutePath {
-  Home = '/',
+  Home = '/*',
   Blog = '/blog/*',
   Portfolio = '/portfolio/*',
   Login = '/login',
