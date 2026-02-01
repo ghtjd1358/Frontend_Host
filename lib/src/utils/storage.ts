@@ -22,6 +22,10 @@ export const storage = {
     sessionStorage.setItem(STORAGE_KEYS.IS_HOST_APP, 'true');
   },
 
+  removeHostApp: () => {
+    sessionStorage.removeItem(STORAGE_KEYS.IS_HOST_APP);
+  },
+
   isHostApp: () => {
     return sessionStorage.getItem(STORAGE_KEYS.IS_HOST_APP) === 'true';
   },

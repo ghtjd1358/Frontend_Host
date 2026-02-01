@@ -17,6 +17,8 @@ export interface LogoProps {
   onClick?: () => void;
   /** 커스텀 클래스 */
   className?: string;
+  /** 중앙 ㅎ만 표시 (사이드바 축소 모드용) */
+  centerOnly?: boolean;
 }
 
 const sizeMap = {
@@ -35,6 +37,7 @@ export const Logo: React.FC<LogoProps> = ({
   interactive = true,
   onClick,
   className = '',
+  centerOnly = false,
 }) => {
   const [sideHover, setSideHover] = useState(false);
   const [centerHover, setCenterHover] = useState(false);
@@ -75,25 +78,27 @@ export const Logo: React.FC<LogoProps> = ({
       role={onClick ? 'button' : undefined}
     >
       {/* 왼쪽 ㅅ */}
-      <svg
-        viewBox="0 0 48 48"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        width={dimensions.side}
-        height={dimensions.side}
-        style={styles.side}
-        onMouseEnter={() => setSideHover(true)}
-        onMouseLeave={() => setSideHover(false)}
-      >
-        <path
-          d="M 8 40 L 24 8 L 40 40"
-          stroke={sideColor}
-          strokeWidth="14"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+      {!centerOnly && (
+        <svg
+          viewBox="0 0 48 48"
           fill="none"
-        />
-      </svg>
+          xmlns="http://www.w3.org/2000/svg"
+          width={dimensions.side}
+          height={dimensions.side}
+          style={styles.side}
+          onMouseEnter={() => setSideHover(true)}
+          onMouseLeave={() => setSideHover(false)}
+        >
+          <path
+            d="M 8 40 L 24 8 L 40 40"
+            stroke={sideColor}
+            strokeWidth="14"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+          />
+        </svg>
+      )}
 
       {/* 중앙 ㅎ */}
       <svg
@@ -133,25 +138,27 @@ export const Logo: React.FC<LogoProps> = ({
       </svg>
 
       {/* 오른쪽 ㅅ */}
-      <svg
-        viewBox="0 0 48 48"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        width={dimensions.side}
-        height={dimensions.side}
-        style={styles.side}
-        onMouseEnter={() => setSideHover(true)}
-        onMouseLeave={() => setSideHover(false)}
-      >
-        <path
-          d="M 8 40 L 24 8 L 40 40"
-          stroke={sideColor}
-          strokeWidth="14"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+      {!centerOnly && (
+        <svg
+          viewBox="0 0 48 48"
           fill="none"
-        />
-      </svg>
+          xmlns="http://www.w3.org/2000/svg"
+          width={dimensions.side}
+          height={dimensions.side}
+          style={styles.side}
+          onMouseEnter={() => setSideHover(true)}
+          onMouseLeave={() => setSideHover(false)}
+        >
+          <path
+            d="M 8 40 L 24 8 L 40 40"
+            stroke={sideColor}
+            strokeWidth="14"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+          />
+        </svg>
+      )}
     </div>
   );
 };

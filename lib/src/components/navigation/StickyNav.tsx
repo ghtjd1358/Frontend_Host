@@ -20,6 +20,8 @@ export interface StickyNavProps {
   showLogo?: boolean;
   /** 커스텀 클래스 */
   className?: string;
+  /** URL hash 업데이트 여부 (기본 false) */
+  updateHash?: boolean;
 }
 
 export const StickyNav: React.FC<StickyNavProps> = ({
@@ -29,12 +31,39 @@ export const StickyNav: React.FC<StickyNavProps> = ({
   topPosition = 20,
   onLogoClick,
   showLogo = true,
-  className = ''
+  className = '',
+  updateHash = false
 }) => {
   const [activeSection, setActiveSection] = useState<string>('');
   const [hoveredSection, setHoveredSection] = useState<string | null>(null);
 
-  // Scroll spy
+  // 초기 로드 시 hash가 있으면 해당 섹션으로 스크롤 + hashchange 이벤트 처리
+  useEffect(() => {
+    const scrollToHash = () => {
+      if (window.location.hash) {
+        const id = window.location.hash.slice(1);
+        const element = document.getElementById(id);
+        if (element) {
+          const elementPosition = element.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.pageYOffset - scrollOffset;
+          window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+        }
+      }
+    };
+
+    // 초기 로드
+    if (updateHash && window.location.hash) {
+      setTimeout(scrollToHash, 100);
+    }
+
+    // 브라우저 뒤로/앞으로 버튼 처리
+    if (updateHash) {
+      window.addEventListener('hashchange', scrollToHash);
+      return () => window.removeEventListener('hashchange', scrollToHash);
+    }
+  }, [updateHash, scrollOffset]);
+
+  // Scroll spy - 스크롤 시 active section 업데이트 + hash 업데이트
   useEffect(() => {
     const handleScroll = () => {
       const viewportHeight = window.innerHeight;
@@ -45,7 +74,13 @@ export const StickyNav: React.FC<StickyNavProps> = ({
         if (element) {
           const rect = element.getBoundingClientRect();
           if (rect.top <= trigger && rect.bottom > trigger) {
-            setActiveSection(section.id);
+            if (activeSection !== section.id) {
+              setActiveSection(section.id);
+              // 스크롤 시에도 hash 업데이트 (pushState로 히스토리 쌓지 않음)
+              if (updateHash) {
+                window.history.replaceState(null, '', `#${section.id}`);
+              }
+            }
             break;
           }
         }
@@ -55,16 +90,20 @@ export const StickyNav: React.FC<StickyNavProps> = ({
     window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [sections, triggerPoint]);
+  }, [sections, triggerPoint, activeSection, updateHash]);
 
   const scrollToSection = useCallback((id: string) => {
     const element = document.getElementById(id);
     if (element) {
+      // URL hash 업데이트 (pushState로 히스토리에 추가)
+      if (updateHash) {
+        window.history.pushState(null, '', `#${id}`);
+      }
       const elementPosition = element.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - scrollOffset;
       window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
     }
-  }, [scrollOffset]);
+  }, [scrollOffset, updateHash]);
 
   const handleLogoClick = useCallback(() => {
     if (onLogoClick) {

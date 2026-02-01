@@ -2,7 +2,24 @@
   "permissions": {
     "allow": [
       "WebFetch(domain:inpa.tistory.com)",
-      "Skill(frontend-design)"
+      "Skill(frontend-design)",
+      "Bash(npm install:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(dir:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run type-check:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run lint:fix:*)",
+      "Bash(cat:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run:*)",
+      "Bash(npm start)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(powershell -Command \"Stop-Process -Id 22848 -Force\")",
+      "Bash(git add:*)"
     ]
   }
 }

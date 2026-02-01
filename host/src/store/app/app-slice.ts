@@ -1,37 +1,35 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { storage, User, ServiceType, AppState } from '@sonhoseong/mfa-lib';
+import { User, ServiceType, AppState } from '@sonhoseong/mfa-lib';
 
 // Re-export types for backwards compatibility
 export type { User, ServiceType };
 
-// localStorage에서 초기 상태 로드
-const loadInitialState = (): AppState => {
-    const accessToken = storage.getAccessToken();
-    const savedUser = storage.getUser() as User | null;
-
-    return {
-        accessToken,
-        user: savedUser,
-        isLoading: false,
-        globalLoadingTitle: '',
-        service: '1',
-        selectedGnb: '',
-    };
+/**
+ * KOMCA 패턴 - 메모리 기반 인증 상태
+ * - Access Token: Redux Store (메모리)에만 저장
+ * - Refresh Token: HttpOnly Cookie (서버 관리)
+ * - 새로고침 시 accessToken은 초기화되고, useInitialize에서 refresh 시도
+ */
+const initialState: AppState = {
+    accessToken: '',
+    user: null,
+    isLoading: false,
+    globalLoadingTitle: '',
+    service: '1',
+    selectedGnb: '',
 };
-
-const initialState: AppState = loadInitialState();
 
 export const appSlice = createSlice({
     name: 'app',
     initialState,
     reducers: {
+        // KOMCA 패턴: Access Token은 메모리(Redux)에만 저장
         setAccessToken(state, action: PayloadAction<string>) {
             state.accessToken = action.payload;
-            storage.setAccessToken(action.payload);
         },
+        // KOMCA 패턴: User 정보도 메모리(Redux)에만 저장
         setUser(state, action: PayloadAction<User | null>) {
             state.user = action.payload;
-            storage.setUser(action.payload);
         },
         setLoading(state, action: PayloadAction<boolean>) {
             state.isLoading = action.payload;
@@ -45,8 +43,8 @@ export const appSlice = createSlice({
         setSelectedGnb(state, action: PayloadAction<string>) {
             state.selectedGnb = action.payload;
         },
+        // KOMCA 패턴: 메모리만 클리어 (Cookie는 서버 API로 삭제)
         logout(state) {
-            storage.clearAuth();
             state.accessToken = '';
             state.user = null;
         },

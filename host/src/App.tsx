@@ -7,22 +7,27 @@
  * - 중앙 집중식 라우팅 관리
  * - 인증 상태 기반 UI 렌더링
  * - 글로벌 컴포넌트 (Toast, Modal, Loading)
+ * - Lnb 사이드바 + Header 레이아웃
  */
 
-import { lazy } from 'react';
-import { Routes, Route, NavLink, useLocation } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
+import { lazy, useMemo } from 'react';
+import { Routes, Route, useLocation } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { RoutePath, NavPath } from '@/routes/paths';
-import { selectUser, selectIsAuthenticated, logout, RootState } from '@/store';
+import { selectIsAuthenticated, RootState } from '@/store';
 import {
   ErrorBoundary,
   GlobalLoading,
   ToastContainer,
   ModalContainer,
+  Lnb,
+  Header,
+  Container,
+  Logo,
 } from '@sonhoseong/mfa-lib';
 import RemoteWrapper from '@/components/RemoteWrapper';
 import AuthGuard from '@/components/AuthGuard';
-import { useAuthListener, useOnlineStatus } from '@/hooks';
+import { useInitialize, useOnlineStatus } from '@/hooks';
 import Login from '@/pages/Login';
 import NotFound from '@/pages/NotFound';
 import '@/styles/App.css';
@@ -32,29 +37,79 @@ const ResumeApp = lazy(() => import('@resume/App'));
 const BlogApp = lazy(() => import('@blog/App'));
 const PortfolioApp = lazy(() => import('@portfolio/App'));
 
+// 메뉴 아이템 정의 - Guest용
+const guestMenuItems = [
+  { id: 'resume', title: '이력서', path: '/', icon: '📄' },
+  { id: 'blog', title: '블로그', path: '/blog', icon: '✍️' },
+  { id: 'portfolio', title: '포트폴리오', path: '/portfolio', icon: '💼' },
+  { id: 'login', title: '로그인', path: '/login', icon: '🔑' },
+];
+
+// 메뉴 아이템 정의 - Auth용
+const authMenuItems = [
+  { id: 'resume', title: '이력서', path: '/', icon: '📄' },
+  { id: 'blog', title: '블로그', path: '/blog', icon: '✍️' },
+  { id: 'portfolio', title: '포트폴리오', path: '/portfolio', icon: '💼' },
+  {
+    id: 'admin',
+    title: '관리',
+    icon: '⚙️',
+    children: [
+      { id: 'admin-skills', title: '스킬 관리', path: '/admin/skills' },
+      { id: 'admin-experience', title: '경력 관리', path: '/admin/experience' },
+      { id: 'admin-projects', title: '프로젝트 관리', path: '/admin/projects' },
+    ],
+  },
+];
+
+// GNB 아이템 (Header용)
+const gnbItems = [
+  { id: 'resume', title: '이력서', path: '/' },
+  { id: 'blog', title: '블로그', path: '/blog' },
+  { id: 'portfolio', title: '포트폴리오', path: '/portfolio' },
+];
+
 const App = () => {
-  const dispatch = useDispatch();
   const location = useLocation();
-  const user = useSelector((state: RootState) => selectUser(state));
   const isAuthenticated = useSelector((state: RootState) => selectIsAuthenticated(state));
   const isOnline = useOnlineStatus();
 
-  // Firebase 인증 상태 리스너 (토큰 자동 갱신)
-  useAuthListener();
+  // KOMCA 패턴: 앱 시작 시 Refresh Token으로 Access Token 갱신 시도
+  const { isInitialized } = useInitialize();
+
+  // 메뉴 아이템 (인증 상태에 따라) - hooks는 조건부 return 전에 호출해야 함
+  const lnbItems = useMemo(() => {
+    return isAuthenticated ? authMenuItems : guestMenuItems;
+  }, [isAuthenticated]);
 
   const isLoginPage = location.pathname === NavPath.Login;
-  const isAdminPage = location.pathname.startsWith('/admin');
 
-  const handleLogout = () => {
-    dispatch(logout());
-  };
+  // 초기화 중에는 로딩 표시
+  if (!isInitialized) {
+    return (
+      <div className="app-initializing">
+        <div className="app-initializing-spinner" />
+        <p>로딩 중...</p>
+      </div>
+    );
+  }
+
+  // 로그인 페이지는 레이아웃 없이 렌더링
+  if (isLoginPage) {
+    return (
+      <ErrorBoundary>
+        <ToastContainer position="top-right" />
+        <ModalContainer />
+        <Login />
+      </ErrorBoundary>
+    );
+  }
 
   return (
     <ErrorBoundary>
       {/* Global Components - KOMCA 패턴 */}
       <ToastContainer position="top-right" />
       <ModalContainer />
-      <GlobalLoading />
 
       {/* 오프라인 상태 알림 */}
       {!isOnline && (
@@ -66,72 +121,15 @@ const App = () => {
         </div>
       )}
 
-      <div className="app-container">
-        {/* Top Navigation - 로그인 페이지에서는 숨김 */}
-        {!isLoginPage && (
-          <nav className="nav" role="navigation" aria-label="메인 네비게이션">
-            <div className="nav-logo">
-              {/* ㅅ */}
-              <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="18" height="18" aria-hidden="true">
-                <path d="M 8 40 L 24 8 L 40 40" stroke="#1E3A5F" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-              </svg>
-              {/* ㅎ */}
-              <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="32" height="32" aria-hidden="true">
-                <rect x="20" y="2" width="8" height="16" rx="4" fill="#1E3A5F"/>
-                <rect x="6" y="16" width="36" height="6" rx="3" fill="#1E3A5F"/>
-                <ellipse cx="24" cy="36" rx="18" ry="12" fill="#1E3A5F"/>
-                <ellipse cx="17" cy="36" rx="4" ry="6" fill="#FFFFFF"/>
-                <ellipse cx="31" cy="36" rx="4" ry="6" fill="#FFFFFF"/>
-              </svg>
-              {/* ㅅ */}
-              <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="18" height="18" aria-hidden="true">
-                <path d="M 8 40 L 24 8 L 40 40" stroke="#1E3A5F" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-              </svg>
-            </div>
-            <div className="nav-links">
-              <NavLink to={NavPath.Home} end className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-                이력서
-              </NavLink>
-              <NavLink to={NavPath.Blog} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-                블로그
-              </NavLink>
-              <NavLink to={NavPath.Portfolio} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-                포트폴리오
-              </NavLink>
-
-              {/* 로그인/로그아웃 */}
-              {!isAuthenticated ? (
-                <NavLink to={NavPath.Login} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-                  로그인
-                </NavLink>
-              ) : (
-                <>
-                  <NavLink to="/admin" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-                    관리
-                  </NavLink>
-                  <button
-                    onClick={handleLogout}
-                    className="nav-link"
-                    type="button"
-                    style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-                  >
-                    로그아웃 ({user?.name})
-                  </button>
-                </>
-              )}
-            </div>
-          </nav>
-        )}
+      <Container>
+        {/* Lnb 사이드바 */}
+        <Lnb lnbItems={lnbItems} logo={<Logo customSize={36} />} />
 
         {/* Main Content */}
-        <main
-          id="main-content"
-          className={
-            isLoginPage ? 'main-content main-content--no-nav' :
-            isAdminPage ? 'main-content main-content--admin' :
-            'main-content'
-          }
-        >
+        <main className="main-content">
+          {/* Header */}
+          <Header gnbItems={gnbItems} logo={<Logo customSize={32} />} />
+
           <Routes>
             {/* 이력서 - 기본 페이지 */}
             <Route
@@ -175,14 +173,13 @@ const App = () => {
               }
             />
 
-            {/* 로그인 */}
-            <Route path={RoutePath.Login} element={<Login />} />
-
             {/* 404 */}
             <Route path={RoutePath.NotFound} element={<NotFound />} />
           </Routes>
+
+          <GlobalLoading />
         </main>
-      </div>
+      </Container>
     </ErrorBoundary>
   );
 };

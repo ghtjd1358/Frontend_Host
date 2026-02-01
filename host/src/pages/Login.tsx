@@ -4,6 +4,7 @@ import { useDispatch } from 'react-redux';
 import { signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider, isFirebaseConfigured } from '@/config/firebase';
 import { setAccessToken, setUser } from '@/store';
+import { postLogin } from '@/network';
 import './Login.css';
 
 /**
@@ -75,23 +76,21 @@ function Login() {
         setIsSubmitting(true);
 
         try {
-            if (email === 'admin@test.com' && password === '1234') {
-                const mockToken = `mock-token-${Date.now()}`;
-                const user = {
-                    id: '1',
-                    name: '관리자',
-                    email: email,
-                    role: 'admin' as const,
-                };
+            // KOMCA 패턴: API 로그인 호출
+            const response = await postLogin(email, password);
 
-                dispatch(setAccessToken(mockToken));
+            if (response.statusCode === 200 && response.data) {
+                const { accessToken, user } = response.data;
+
+                // Access Token은 Redux Store (메모리)에만 저장
+                // Refresh Token은 서버가 HttpOnly Cookie로 설정
+                dispatch(setAccessToken(accessToken));
                 dispatch(setUser(user));
                 navigate(from, { replace: true });
-            } else {
-                setError('이메일 또는 비밀번호가 올바르지 않습니다.');
             }
-        } catch (err) {
-            setError('로그인 중 오류가 발생했습니다.');
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { error?: string } } };
+            setError(error.response?.data?.error || '로그인 중 오류가 발생했습니다.');
         } finally {
             setIsSubmitting(false);
         }
