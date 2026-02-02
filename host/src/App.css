@@ -63,7 +63,7 @@ button {
    ============================================ */
 
 .app-container {
-  display: flex;
+  display: block;
   min-height: 100vh;
 }
 
@@ -386,10 +386,11 @@ button {
    메인 콘텐츠 - Lnb와 함께 사용
    ============================================ */
 
-.app-lnb + .main-content,
-.app-container .main-content {
+/* Lnb가 있을 때만 margin-left 적용 */
+.app-lnb + .main-content {
   flex: 1;
   margin-left: 260px;
+  max-width: none;
   transition: margin-left 0.3s ease;
 }
 
@@ -400,6 +401,8 @@ button {
 .main-content {
   min-height: 100vh;
   padding-top: 60px;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 .main-content--no-nav {

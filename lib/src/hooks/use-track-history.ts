@@ -1,5 +1,5 @@
 /**
- * Track History Hook - KOMCA 패턴
+ * Track History Hook
  * 라우팅 변경 감지 및 자동 탭(Recent Menu) 관리
  */
 

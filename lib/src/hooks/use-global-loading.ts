@@ -1,5 +1,5 @@
 /**
- * Global Loading Hook - KOMCA 패턴
+ * Global Loading Hook
  * API 호출 시 전역 로딩 표시
  */
 

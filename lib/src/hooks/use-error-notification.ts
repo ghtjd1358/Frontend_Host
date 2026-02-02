@@ -1,5 +1,5 @@
 /**
- * Error Notification Hook - KOMCA 패턴
+ * Error Notification Hook
  * API 에러 발생시 자동 알림
  */
 

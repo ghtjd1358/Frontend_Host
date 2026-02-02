@@ -19,7 +19,14 @@
       "Bash(findstr:*)",
       "Bash(taskkill:*)",
       "Bash(powershell -Command \"Stop-Process -Id 22848 -Force\")",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfeat: KOMCA 스타일 인증 시스템 구현\n\n- Vercel API Routes 추가 (api/auth/login, refresh, logout, me)\n- JWT 토큰 생성/검증 유틸리티 구현\n- axios 인터셉터 401 자동 갱신 로직\n- useInitialize 훅 (앱 시작 시 토큰 갱신)\n- useLogout 훅 (API + Redux 로그아웃)\n- Redux Store 메모리 only 방식으로 변경\n- Login 페이지 API 연동\n\nKOMCA 패턴:\n- Access Token: Redux Store (메모리)\n- Refresh Token: HttpOnly Cookie (서버 관리)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(curl:*)",
+      "Bash(cd:*)",
+      "Bash(rm:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nrefactor: Host를 최소 껍데기 구조로 정리\n\n- store, hooks, network, config, utils 폴더 삭제\n- pages, components, routes, styles 폴더 삭제\n- lib의 store, LoginPage 등 공통 모듈 사용\n- 5개 파일로 최소화: App.tsx, bootstrap.tsx, index.ts, App.css, remote.d.ts\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n)\")"
     ]
   }
 }

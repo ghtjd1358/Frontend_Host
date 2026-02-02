@@ -1,5 +1,5 @@
 /**
- * Storage 유틸리티 - KOMCA 패턴
+ * Storage 유틸리티
  * localStorage/sessionStorage 관리
  */
 

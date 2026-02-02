@@ -1,5 +1,5 @@
 /**
- * Hooks 모듈 - KOMCA 패턴
+ * Hooks 모듈
  */
 
 // Auth Hooks

@@ -7,7 +7,6 @@ require('dotenv').config();
 // 환경 변수에서 Remote URL 가져오기
 const REMOTE1_URL = process.env.REMOTE1_URL || 'http://localhost:5001';
 const REMOTE2_URL = process.env.REMOTE2_URL || 'http://localhost:5002';
-const REMOTE3_URL = process.env.REMOTE3_URL || 'http://localhost:5003';
 
 module.exports = {
   entry: './src/index.ts',
@@ -21,9 +20,10 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.tsx?$/,
+        test: /\.(tsx?|jsx?)$/,
         include: [
-          path.resolve(__dirname, 'src')
+          path.resolve(__dirname, 'src'),
+          path.resolve(__dirname, '../lib/dist')
         ],
         use: {
           loader: 'babel-loader',
@@ -65,7 +65,9 @@ module.exports = {
   resolve: {
     extensions: ['.tsx', '.ts', '.js'],
     alias: {
-      '@': path.resolve(__dirname, 'src')
+      '@': path.resolve(__dirname, 'src'),
+      'react': path.resolve(__dirname, '../node_modules/react'),
+      'react-dom': path.resolve(__dirname, '../node_modules/react-dom')
     }
   },
   plugins: [
@@ -73,8 +75,7 @@ module.exports = {
       name: 'container',
       remotes: {
         '@resume': `remote1@${REMOTE1_URL}/remoteEntry.js`,
-        '@blog': `blog@${REMOTE2_URL}/remoteEntry.js`,
-        '@portfolio': `portfolio@${REMOTE3_URL}/remoteEntry.js`
+        '@blog': `blog@${REMOTE2_URL}/remoteEntry.js`
       },
       shared: {
         react: { singleton: true, eager: true, requiredVersion: '^19.2.1' },

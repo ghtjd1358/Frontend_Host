@@ -1,5 +1,5 @@
 /**
- * Network 모듈 - KOMCA 패턴
+ * Network 모듈
  */
 
 export * from './axios-factory';

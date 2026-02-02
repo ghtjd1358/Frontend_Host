@@ -15,12 +15,6 @@ declare module '@blog/App' {
   export default App;
 }
 
-declare module '@portfolio/App' {
-  import { ComponentType } from 'react';
-  const App: ComponentType<Record<string, never>>;
-  export default App;
-}
-
 // LnbItem 타입 정의
 export interface LnbItem {
   title: string;
@@ -37,12 +31,6 @@ declare module '@resume/LnbItems' {
 }
 
 declare module '@blog/LnbItems' {
-  import { LnbItem } from './remote.d';
-  export const lnbItems: LnbItem[];
-  export default lnbItems;
-}
-
-declare module '@portfolio/LnbItems' {
   import { LnbItem } from './remote.d';
   export const lnbItems: LnbItem[];
   export default lnbItems;

@@ -1,5 +1,5 @@
 /**
- * Host Store 접근 유틸리티 - KOMCA 패턴
+ * Host Store 접근 유틸리티
  * Remote 앱에서 Host의 Redux Store에 접근
  */
 

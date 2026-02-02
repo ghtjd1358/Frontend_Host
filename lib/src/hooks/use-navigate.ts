@@ -1,5 +1,5 @@
 /**
- * MFA Navigate Hook - KOMCA 패턴
+ * MFA Navigate Hook
  * 서비스 인식 네비게이션
  */
 

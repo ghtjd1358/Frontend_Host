@@ -1,5 +1,5 @@
 /**
- * App Store - KOMCA 패턴
+ * App Store
  *
  * Host/Remote 모두에서 사용할 수 있는 Store 설정
  * - Host: 자체 store 생성 후 window.__REDUX_STORE__에 노출
@@ -28,15 +28,14 @@ export const appSlice = createSlice({
     name: 'app',
     initialState: initialAppState,
     reducers: {
+        // Access Token은 메모리(Redux)에만 저장
+        // 새로고침 시 Refresh Token(HttpOnly Cookie)으로 재발급
         setAccessToken: (state, action: PayloadAction<string>) => {
             state.accessToken = action.payload;
-            // localStorage에도 저장
-            storage.setAccessToken(action.payload);
         },
+        // User 정보도 메모리(Redux)에만 저장
         setUser: (state, action: PayloadAction<User | null>) => {
             state.user = action.payload;
-            // localStorage에도 저장
-            storage.setUser(action.payload);
         },
         setLoading: (state, action: PayloadAction<boolean>) => {
             state.isLoading = action.payload;
@@ -92,31 +91,27 @@ const createRootReducer = () => combineReducers({
     ...dynamicReducers,
 });
 
-// Store 인스턴스 (단독 실행용)
-let storeInstance: ReturnType<typeof configureStore> | null = null;
+/**
+ * Store 인스턴스 - KOMCA 패턴
+ * 앱 전체에서 하나의 store 사용
+ */
+export const store = configureStore({
+    reducer: createRootReducer(),
+    middleware: (getDefaultMiddleware) =>
+        getDefaultMiddleware({
+            serializableCheck: false,
+        }),
+});
+
+// Store 인스턴스 (단독 실행용) - 호환성 유지
+let storeInstance: ReturnType<typeof configureStore> | null = store;
 
 /**
  * App Store 생성
  * Host 또는 Remote 단독 실행 시 호출
+ * @deprecated store 인스턴스를 직접 사용하세요
  */
 export const createAppStore = () => {
-    const store = configureStore({
-        reducer: createRootReducer(),
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({
-                serializableCheck: false,
-            }),
-        // localStorage에서 초기 상태 복원
-        preloadedState: {
-            app: {
-                ...initialAppState,
-                accessToken: storage.getAccessToken(),
-                user: storage.getUser(),
-            },
-        },
-    });
-
-    storeInstance = store;
     return store;
 };
 

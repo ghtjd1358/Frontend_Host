@@ -15,6 +15,7 @@
     "@lottiefiles/dotlottie-react": "^0.17.12",
     "@reduxjs/toolkit": "^2.11.2",
     "@sonhoseong/mfa-lib": "^1.2.4",
+    "@supabase/supabase-js": "^2.93.3",
     "axios": "^1.13.2",
     "firebase": "^12.8.0",
     "jsonwebtoken": "^9.0.3",

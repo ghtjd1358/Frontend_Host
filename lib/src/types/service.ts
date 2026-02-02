@@ -1,5 +1,5 @@
 /**
- * Service Type 정의 - KOMCA 패턴
+ * Service Type 정의
  * 각 Remote 앱을 구분하는 타입
  */
 

@@ -24,3 +24,6 @@ export * from './logo';
 
 // Page (LoginPage 등)
 export * from './page';
+
+// Router
+export * from './router';

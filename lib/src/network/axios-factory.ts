@@ -1,5 +1,5 @@
 /**
- * Axios Factory - KOMCA 패턴
+ * Axios Factory
  * 401 에러시 자동 토큰 갱신 포함
  */
 

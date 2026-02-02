@@ -1,5 +1,5 @@
 /**
- * Modal Hooks - KOMCA 패턴
+ * Modal Hooks
  * Alert, Confirm 모달 관리
  */
 

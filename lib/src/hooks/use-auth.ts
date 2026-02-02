@@ -1,5 +1,5 @@
 /**
- * Auth Hooks - KOMCA 패턴
+ * Auth Hooks
  * 로그인, 로그아웃, 토큰 갱신
  */
 
