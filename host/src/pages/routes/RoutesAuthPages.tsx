@@ -1,24 +1,22 @@
 /**
  * RoutesAuthPages - 로그인 사용자용 라우트
- * Platform 없이 직접 라우팅, Suspense 없음 (App.tsx에서 처리)
+ * KOMCA 패턴: top-level await로 remote pathPrefix 가져오기
  */
 import React, { lazy } from 'react';
 import { Route, Routes, Navigate } from 'react-router-dom';
 import { RoutePath } from './paths';
+import Dashboard from '../Dashboard';
 
-// Remote 앱 lazy 로드
-const ResumeApp = lazy(() => import('@resume/App'));
-const BlogApp = lazy(() => import('@blog/App'));
+// Remote lazy imports (KOMCA 패턴)
+// @ts-ignore
+const ResumeApp = React.lazy(() => import('@resume/App'));
+// @ts-ignore
+const { pathPrefix: resumePathPrefix } = await import('@resume/LnbItems');
+// @ts-ignore
+const BlogApp = React.lazy(() => import('@blog/App'));
+// @ts-ignore
+const { pathPrefix: blogPathPrefix } = await import('@blog/LnbItems');
 
-// 대시보드 페이지
-const Dashboard = () => (
-    <div style={{ padding: 32 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 600, marginBottom: 16 }}>대시보드</h1>
-        <p style={{ color: '#64748b' }}>포트폴리오 플랫폼에 오신 것을 환영합니다.</p>
-    </div>
-);
-
-// 404 페이지
 const NotFound = () => (
     <div style={{ textAlign: 'center', padding: 48 }}>
         <h1>404</h1>
@@ -29,12 +27,11 @@ const NotFound = () => (
 function RoutesAuthPages() {
     return (
         <Routes>
-            <Route path="/" element={<Navigate to="/platform/dashboard" replace />} />
-            <Route path="/platform" element={<Navigate to="/platform/dashboard" replace />} />
-            <Route path="/platform/dashboard" element={<Dashboard />} />
-            <Route path="/platform/resume/*" element={<ResumeApp />} />
-            <Route path="/platform/blog/*" element={<BlogApp />} />
-            <Route path={RoutePath.Login} element={<Navigate to="/platform/dashboard" replace />} />
+            <Route path="/" element={<Navigate to={RoutePath.Dashboard} replace />} />
+            <Route path={RoutePath.Dashboard} element={<Dashboard />} />
+            <Route path={`${resumePathPrefix}/*`} element={<ResumeApp />} />
+            <Route path={`${blogPathPrefix}/*`} element={<BlogApp />} />
+            <Route path={RoutePath.Login} element={<Navigate to={RoutePath.Dashboard} replace />} />
             <Route path="*" element={<NotFound />} />
         </Routes>
     );

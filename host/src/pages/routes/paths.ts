@@ -1,14 +1,9 @@
 /**
- * Host Route Paths
+ * Host Route Paths (단순화)
  */
-export const platformPrefix = '/platform';
-
 export enum RoutePath {
-    // Platform
     Dashboard = '/dashboard',
     Resume = '/resume',
     Blog = '/blog',
-
-    // Auth
     Login = '/login',
 }

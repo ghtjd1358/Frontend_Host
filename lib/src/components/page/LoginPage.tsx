@@ -7,6 +7,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { getStore, setAccessToken, setUser } from '../../store/app-store';
+import { storage } from '../../utils/storage';
 import { User } from '../../types';
 import './LoginPage.css';
 
@@ -53,8 +54,15 @@ export function LoginPage({
 
         try {
             const { token, user } = await onGoogleLogin();
+
+            // Redux store에 저장
             store.dispatch(setAccessToken(token));
             store.dispatch(setUser(user));
+
+            // localStorage에도 저장 (페이지 새로고침 대비)
+            storage.setAccessToken(token);
+            storage.setUser(user);
+
             onLoginSuccess?.(user);
 
             // 페이지 이동
@@ -85,8 +93,14 @@ export function LoginPage({
                     role: 'admin',
                 };
 
+                // Redux store에 저장
                 store.dispatch(setAccessToken(mockToken));
                 store.dispatch(setUser(user));
+
+                // localStorage에도 저장 (페이지 새로고침 대비)
+                storage.setAccessToken(mockToken);
+                storage.setUser(user);
+
                 onLoginSuccess?.(user);
 
                 // 페이지 이동

@@ -24,11 +24,13 @@ interface RemoteLnbItems {
 }
 
 declare module '@resume/LnbItems' {
+  export const pathPrefix: string;
   export const lnbItems: RemoteLnbItems;
   export default lnbItems;
 }
 
 declare module '@blog/LnbItems' {
+  export const pathPrefix: string;
   export const lnbItems: RemoteLnbItems;
   export default lnbItems;
 }
