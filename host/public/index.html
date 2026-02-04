@@ -33,8 +33,9 @@
   </noscript>
 </head>
 <body>
-  <!-- 스킵 네비게이션 (접근성) -->
-  <a href="#main-content" class="skip-link">본문으로 건너뛰기</a>
+  <!-- 스킵 네비게이션 (접근성) - 기본적으로 숨김, Tab 포커스시 표시 -->
+  <a href="#main-content" class="skip-link" style="position:absolute;top:-100%;left:16px;z-index:9999;padding:12px 24px;background:#1E3A5F;color:white;text-decoration:none;border-radius:4px;">본문으로 건너뛰기</a>
+  <style>.skip-link:focus{top:16px !important;}</style>
 
   <div id="root"></div>
 

@@ -2,7 +2,9 @@
  * Remote Module 타입 선언
  * Module Federation으로 로드되는 Remote 앱 타입 정의
  */
+import { LnbMenuItem } from '@sonhoseong/mfa-lib';
 
+// Remote App 모듈 선언
 declare module '@resume/App' {
   import { ComponentType } from 'react';
   const App: ComponentType<Record<string, never>>;
@@ -15,24 +17,18 @@ declare module '@blog/App' {
   export default App;
 }
 
-// LnbItem 타입 정의
-export interface LnbItem {
-  title: string;
-  link: string;
-  searchStr?: string;
-  subItems?: LnbItem[];
+// KOMCA 패턴: Remote LnbItems 모듈 선언
+interface RemoteLnbItems {
+  hasPrefixList: LnbMenuItem[];
+  hasPrefixAuthList?: LnbMenuItem[];
 }
 
-// Remote LnbItems 모듈 선언
 declare module '@resume/LnbItems' {
-  import { LnbItem } from './remote.d';
-  export const lnbItems: LnbItem[];
+  export const lnbItems: RemoteLnbItems;
   export default lnbItems;
 }
 
 declare module '@blog/LnbItems' {
-  import { LnbItem } from './remote.d';
-  export const lnbItems: LnbItem[];
+  export const lnbItems: RemoteLnbItems;
   export default lnbItems;
 }
-
