@@ -7,7 +7,8 @@ import {
     store,
     exposeStore,
     selectIsAuthenticated,
-    useSimpleInitialize,
+    useSupabaseInitialize,
+    initSupabaseFromEnv,
     ErrorBoundary,
     ToastContainer,
     ModalContainer,
@@ -16,6 +17,9 @@ import {
     Logo,
     GlobalLoading,
 } from '@sonhoseong/mfa-lib';
+
+// Supabase 초기화
+initSupabaseFromEnv();
 import { RoutesGuestPages, RoutesAuthPages } from './pages/routes';
 import { lnbItems } from './lnb-items';
 import './App.css';
@@ -25,7 +29,7 @@ exposeStore(store);
 
 const App = () => {
     const isAuthenticated = useSelector(selectIsAuthenticated);
-    const { initialized } = useSimpleInitialize();
+    const { initialized } = useSupabaseInitialize();
 
     if (!initialized) {
         return null;

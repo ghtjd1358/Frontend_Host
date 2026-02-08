@@ -6,7 +6,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { logout } from '../../store/app-store';
+import { logout, selectAccessToken, selectUser } from '../../store/app-store';
 
 export interface GnbItem {
   id: string;
@@ -23,7 +23,9 @@ export interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ gnbItems, appName = '앱', logo }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const user = useSelector((state: any) => state.app?.user);
+  const accessToken = useSelector(selectAccessToken);
+  const user = useSelector(selectUser);
+  const isAuthenticated = !!accessToken;
 
   const handleNavigate = (path: string) => {
     navigate(path);
@@ -52,13 +54,17 @@ export const Header: React.FC<HeaderProps> = ({ gnbItems, appName = '앱', logo 
           ))}
         </nav>
         <div className="app-header-user">
-          {user && (
+          {isAuthenticated ? (
             <>
-              <span className="app-header-user-name">{user.name || user.email}</span>
+              <span className="app-header-user-name">{user?.name || user?.email}</span>
               <button className="app-header-logout" onClick={handleLogout}>
                 로그아웃
               </button>
             </>
+          ) : (
+            <button className="app-header-login" onClick={() => handleNavigate('/login')}>
+              로그인
+            </button>
           )}
         </div>
       </div>

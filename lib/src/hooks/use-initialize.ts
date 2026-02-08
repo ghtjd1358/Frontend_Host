@@ -4,9 +4,24 @@
  */
 
 import { useEffect, useState } from 'react';
+import { Session, AuthChangeEvent } from '@supabase/supabase-js';
 import { getHostStore, dispatchToHost } from '../store/store-access';
 import { storage } from '../utils/storage';
 import { User } from '../types';
+import { getSupabase } from '../network/supabase-client';
+
+/**
+ * Supabase User를 앱 User 타입으로 변환
+ */
+function mapSupabaseUser(supabaseUser: any): User {
+  return {
+    id: supabaseUser.id,
+    email: supabaseUser.email || '',
+    name: supabaseUser.user_metadata?.name || supabaseUser.email?.split('@')[0] || '',
+    role: supabaseUser.user_metadata?.role || 'user',
+    avatar: supabaseUser.user_metadata?.avatar_url,
+  };
+}
 
 // 초기화 옵션
 export interface InitializeOptions {
@@ -100,6 +115,7 @@ export function useInitialize(options: InitializeOptions = {}) {
 
 /**
  * 간단한 초기화 Hook (토큰/사용자 정보 복구만)
+ * @deprecated Supabase 사용 시 useSupabaseSimpleInitialize 사용 권장
  */
 export function useSimpleInitialize() {
   const [initialized, setInitialized] = useState(false);
@@ -126,6 +142,74 @@ export function useSimpleInitialize() {
     }
 
     setInitialized(true);
+  }, []);
+
+  return { initialized };
+}
+
+/**
+ * Supabase 초기화 Hook
+ * 앱 시작 시 Supabase 세션 복구 및 Auth 상태 변경 구독
+ */
+export function useSupabaseInitialize() {
+  const [initialized, setInitialized] = useState(false);
+
+  useEffect(() => {
+    let cleanup: (() => void) | undefined;
+
+    const initialize = async () => {
+      try {
+        const supabase = getSupabase();
+
+        // 1. 현재 세션 확인
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (session) {
+          const user = mapSupabaseUser(session.user);
+          dispatchToHost({ type: 'app/setAccessToken', payload: session.access_token });
+          dispatchToHost({ type: 'app/setUser', payload: user });
+          storage.setAccessToken(session.access_token);
+          storage.setUser(user);
+          console.log('[Supabase Init] 세션 복구:', user.email);
+        }
+
+        // 2. Recent Menu 복구
+        const savedRecentMenu = storage.getRecentMenu();
+        if (savedRecentMenu.length > 0) {
+          dispatchToHost({
+            type: 'recentMenu/setRecentMenu',
+            payload: { list: savedRecentMenu },
+          });
+        }
+
+        // 3. Auth 상태 변경 구독
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          (event: AuthChangeEvent, session: Session | null) => {
+            if (session) {
+              const user = mapSupabaseUser(session.user);
+              dispatchToHost({ type: 'app/setAccessToken', payload: session.access_token });
+              dispatchToHost({ type: 'app/setUser', payload: user });
+              storage.setAccessToken(session.access_token);
+              storage.setUser(user);
+            } else if (event === 'SIGNED_OUT') {
+              dispatchToHost({ type: 'app/setAccessToken', payload: '' });
+              dispatchToHost({ type: 'app/setUser', payload: null });
+              storage.clearAuth();
+            }
+          }
+        );
+
+        cleanup = () => subscription.unsubscribe();
+        setInitialized(true);
+      } catch (err) {
+        console.error('[Supabase Init] 초기화 실패:', err);
+        setInitialized(true); // 에러가 발생해도 앱은 시작
+      }
+    };
+
+    initialize();
+
+    return () => cleanup?.();
   }, []);
 
   return { initialized };

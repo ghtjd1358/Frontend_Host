@@ -5,6 +5,9 @@
 // Auth Hooks
 export * from './use-auth';
 
+// Supabase Auth Hooks
+export * from './use-supabase-auth';
+
 // Initialize Hook
 export * from './use-initialize';
 

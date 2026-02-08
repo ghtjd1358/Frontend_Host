@@ -10,7 +10,8 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role?: 'admin' | 'user';
+  role?: 'admin' | 'user' | 'editor' | 'viewer' | 'guest' | string;
+  avatar?: string;
 }
 
 // App State 타입

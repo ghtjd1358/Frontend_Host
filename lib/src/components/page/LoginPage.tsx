@@ -3,13 +3,28 @@
  *
  * 공통 로그인 페이지 컴포넌트
  * Host/Remote 모두에서 사용 가능
+ * Supabase Auth 지원
  */
 
 import React, { useState, useCallback } from 'react';
 import { getStore, setAccessToken, setUser } from '../../store/app-store';
 import { storage } from '../../utils/storage';
 import { User } from '../../types';
+import { getSupabase } from '../../network/supabase-client';
 import './LoginPage.css';
+
+/**
+ * Supabase User를 앱 User 타입으로 변환
+ */
+function mapSupabaseUser(supabaseUser: any): User {
+  return {
+    id: supabaseUser.id,
+    email: supabaseUser.email || '',
+    name: supabaseUser.user_metadata?.name || supabaseUser.email?.split('@')[0] || '',
+    role: supabaseUser.user_metadata?.role || 'user',
+    avatar: supabaseUser.user_metadata?.avatar_url,
+  };
+}
 
 export interface LoginPageProps {
     /** 로그인 성공 후 이동할 경로 (기본: /) */
@@ -24,6 +39,8 @@ export interface LoginPageProps {
     onGoogleLogin?: () => Promise<{ token: string; user: User }>;
     /** 테스트 계정 표시 여부 */
     showTestAccount?: boolean;
+    /** Supabase Auth 사용 여부 (기본: true) */
+    useSupabase?: boolean;
 }
 
 export function LoginPage({
@@ -32,7 +49,8 @@ export function LoginPage({
     appName = 'MFA',
     logo,
     onGoogleLogin,
-    showTestAccount = true,
+    showTestAccount = false,
+    useSupabase = true,
 }: LoginPageProps) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -77,43 +95,86 @@ export function LoginPage({
         }
     }, [onGoogleLogin, store, onLoginSuccess, redirectPath]);
 
+    // Supabase 로그인 핸들러
+    const handleSupabaseLogin = useCallback(async () => {
+        try {
+            const supabase = getSupabase();
+            const { data, error: authError } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
+
+            if (authError) {
+                // 에러 메시지 한글화
+                if (authError.message.includes('Invalid login credentials')) {
+                    throw new Error('이메일 또는 비밀번호가 올바르지 않습니다.');
+                }
+                throw new Error(authError.message);
+            }
+
+            if (!data.session || !data.user) {
+                throw new Error('로그인 응답이 올바르지 않습니다.');
+            }
+
+            const user = mapSupabaseUser(data.user);
+
+            // Redux store에 저장
+            store.dispatch(setAccessToken(data.session.access_token));
+            store.dispatch(setUser(user));
+
+            // localStorage에도 저장
+            storage.setAccessToken(data.session.access_token);
+            storage.setUser(user);
+
+            onLoginSuccess?.(user);
+
+            // 페이지 이동
+            window.location.href = redirectPath;
+        } catch (err: any) {
+            throw err;
+        }
+    }, [email, password, store, onLoginSuccess, redirectPath]);
+
+    // Mock 로그인 핸들러 (테스트용)
+    const handleMockLogin = useCallback(async () => {
+        if (email === 'admin@test.com' && password === '1234') {
+            const mockToken = `mock-token-${Date.now()}`;
+            const user: User = {
+                id: '1',
+                name: '관리자',
+                email: email,
+                role: 'admin',
+            };
+
+            store.dispatch(setAccessToken(mockToken));
+            store.dispatch(setUser(user));
+            storage.setAccessToken(mockToken);
+            storage.setUser(user);
+
+            onLoginSuccess?.(user);
+            window.location.href = redirectPath;
+        } else {
+            throw new Error('이메일 또는 비밀번호가 올바르지 않습니다.');
+        }
+    }, [email, password, store, onLoginSuccess, redirectPath]);
+
     const handleSubmit = useCallback(async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
         setIsSubmitting(true);
 
         try {
-            // 테스트 계정 체크
-            if (email === 'admin@test.com' && password === '1234') {
-                const mockToken = `mock-token-${Date.now()}`;
-                const user: User = {
-                    id: '1',
-                    name: '관리자',
-                    email: email,
-                    role: 'admin',
-                };
-
-                // Redux store에 저장
-                store.dispatch(setAccessToken(mockToken));
-                store.dispatch(setUser(user));
-
-                // localStorage에도 저장 (페이지 새로고침 대비)
-                storage.setAccessToken(mockToken);
-                storage.setUser(user);
-
-                onLoginSuccess?.(user);
-
-                // 페이지 이동
-                window.location.href = redirectPath;
+            if (useSupabase) {
+                await handleSupabaseLogin();
             } else {
-                setError('이메일 또는 비밀번호가 올바르지 않습니다.');
+                await handleMockLogin();
             }
-        } catch (err) {
-            setError('로그인 중 오류가 발생했습니다.');
+        } catch (err: any) {
+            setError(err.message || '로그인 중 오류가 발생했습니다.');
         } finally {
             setIsSubmitting(false);
         }
-    }, [email, password, store, onLoginSuccess, redirectPath]);
+    }, [useSupabase, handleSupabaseLogin, handleMockLogin]);
 
     return (
         <div className="login-page">

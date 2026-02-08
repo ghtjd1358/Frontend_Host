@@ -5,12 +5,20 @@
 
 import { User, HostStore, HostRootState } from '../types';
 import { Reducer } from '@reduxjs/toolkit';
+import { store } from './app-store';
 
 /**
  * Host Store 가져오기
+ * - Host 또는 Remote(Host 내부): window.__REDUX_STORE__ 사용
+ * - Remote 단독 실행: lib의 store 사용 (fallback)
  */
 export const getHostStore = (): HostStore | undefined => {
-  return window.__REDUX_STORE__;
+  // Host의 store가 있으면 사용
+  if (window.__REDUX_STORE__) {
+    return window.__REDUX_STORE__;
+  }
+  // 없으면 lib의 기본 store 사용 (Remote 단독 실행 시)
+  return store as unknown as HostStore;
 };
 
 /**

@@ -6,7 +6,7 @@
 import React, { useState, isValidElement, cloneElement } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { logout } from '../../store/app-store';
+import { logout, selectAccessToken, selectUser } from '../../store/app-store';
 
 export interface LnbMenuItem {
   id: string;
@@ -30,8 +30,9 @@ export const Lnb: React.FC<LnbProps> = ({ lnbItems, title, appName, logo }) => {
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [collapsed, setCollapsed] = useState(false);
 
-  const user = useSelector((state: any) => state.app?.user);
-  const isAuthenticated = useSelector((state: any) => !!state.app?.accessToken);
+  const accessToken = useSelector(selectAccessToken);
+  const user = useSelector(selectUser);
+  const isAuthenticated = !!accessToken;
 
   const handleNavigate = (path: string) => {
     navigate(path);
@@ -119,25 +120,39 @@ export const Lnb: React.FC<LnbProps> = ({ lnbItems, title, appName, logo }) => {
         ))}
       </nav>
 
-      {isAuthenticated && (
-        <div className={`app-lnb-footer ${collapsed ? 'collapsed' : ''}`}>
-          <div className="app-lnb-user-section">
-            <div className="app-lnb-avatar">
-              {user?.name?.charAt(0) || user?.email?.charAt(0) || '?'}
+      <div className={`app-lnb-footer ${collapsed ? 'collapsed' : ''}`}>
+        {isAuthenticated ? (
+          <>
+            <div className="app-lnb-user-section">
+              <div className="app-lnb-avatar">
+                {user?.name?.charAt(0) || user?.email?.charAt(0) || '?'}
+              </div>
+              {!collapsed && user && (
+                <span className="app-lnb-user-name">{user.name || user.email}</span>
+              )}
             </div>
-            {!collapsed && user && (
-              <span className="app-lnb-user-name">{user.name || user.email}</span>
-            )}
-          </div>
-          <button className="app-lnb-logout-icon" onClick={handleLogout} title="로그아웃">
+            <button className="app-lnb-logout-icon" onClick={handleLogout} title="로그아웃">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+            </button>
+          </>
+        ) : (
+          <button
+            className="app-lnb-login-btn"
+            onClick={() => handleNavigate('/login')}
+          >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-              <polyline points="16 17 21 12 16 7" />
-              <line x1="21" y1="12" x2="9" y2="12" />
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+              <polyline points="10 17 15 12 10 7" />
+              <line x1="15" y1="12" x2="3" y2="12" />
             </svg>
+            {!collapsed && <span>로그인</span>}
           </button>
-        </div>
-      )}
+        )}
+      </div>
     </aside>
   );
 };
