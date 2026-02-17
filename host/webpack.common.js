@@ -8,6 +8,74 @@ require('dotenv').config();
 const REMOTE1_URL = process.env.REMOTE1_URL || 'http://localhost:5001';
 const REMOTE2_URL = process.env.REMOTE2_URL || 'http://localhost:5002';
 
+// ============================================
+// 동적 Remote 로더 (KOMCA 패턴)
+// - Promise 기반 런타임 로딩
+// - 캐시 무효화 (타임스탬프)
+// - Graceful fallback (로드 실패 시에도 앱 동작)
+// ============================================
+const dynamicRemoteLoader = (remoteName, remoteUrl) => {
+  // 캐시 무효화를 위한 타임스탬프 (1분 단위)
+  const timestamp = Math.floor(Date.now() / 60000);
+  const urlWithTimestamp = `${remoteUrl}?t=${timestamp}`;
+
+  return `promise new Promise((resolve, reject) => {
+    // 이미 로드된 경우 재사용
+    if (window['${remoteName}']) {
+      resolve({
+        get: (request) => window['${remoteName}'].get(request),
+        init: (arg) => {
+          try {
+            return window['${remoteName}'].init(arg);
+          } catch (e) {
+            console.warn('[MFA] ${remoteName} already initialized');
+          }
+        }
+      });
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = '${urlWithTimestamp}';
+    script.type = 'text/javascript';
+    script.async = true;
+
+    script.onload = () => {
+      if (window['${remoteName}']) {
+        console.log('[MFA] ${remoteName} loaded successfully');
+        resolve({
+          get: (request) => window['${remoteName}'].get(request),
+          init: (arg) => {
+            try {
+              return window['${remoteName}'].init(arg);
+            } catch (e) {
+              console.warn('[MFA] ${remoteName} already initialized');
+            }
+          }
+        });
+      } else {
+        console.error('[MFA] ${remoteName} not found on window after script load');
+        // Graceful fallback: 빈 모듈 반환
+        resolve({
+          get: () => Promise.resolve(() => () => null),
+          init: () => {}
+        });
+      }
+    };
+
+    script.onerror = (error) => {
+      console.error('[MFA] Failed to load ${remoteName}:', error);
+      // Graceful fallback: 에러 시에도 앱 계속 동작
+      resolve({
+        get: () => Promise.resolve(() => () => null),
+        init: () => {}
+      });
+    };
+
+    document.head.appendChild(script);
+  })`
+};
+
 module.exports = {
   entry: './src/index.ts',
   output: {
@@ -74,8 +142,9 @@ module.exports = {
     new ModuleFederationPlugin({
       name: 'container',
       remotes: {
-        '@resume': `remote1@${REMOTE1_URL}/remoteEntry.js`,
-        '@blog': `blog@${REMOTE2_URL}/remoteEntry.js`
+        // 동적 로더 사용 (Graceful Fallback 포함)
+        '@resume': dynamicRemoteLoader('remote1', `${REMOTE1_URL}/remoteEntry.js`),
+        '@blog': dynamicRemoteLoader('blog', `${REMOTE2_URL}/remoteEntry.js`)
       },
       shared: {
         react: { singleton: true, eager: true, requiredVersion: '^19.2.1' },
@@ -98,6 +167,8 @@ new webpack.DefinePlugin({
       'process.env.FIREBASE_STORAGE_BUCKET': JSON.stringify(process.env.FIREBASE_STORAGE_BUCKET),
       'process.env.FIREBASE_MESSAGING_SENDER_ID': JSON.stringify(process.env.FIREBASE_MESSAGING_SENDER_ID),
       'process.env.FIREBASE_APP_ID': JSON.stringify(process.env.FIREBASE_APP_ID),
+      'process.env.REACT_APP_SUPABASE_URL': JSON.stringify(process.env.REACT_APP_SUPABASE_URL),
+      'process.env.REACT_APP_SUPABASE_ANON_KEY': JSON.stringify(process.env.REACT_APP_SUPABASE_ANON_KEY),
     })
   ]
 };

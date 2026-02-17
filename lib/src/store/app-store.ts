@@ -7,9 +7,11 @@
  * - Remote (in Host): window.__REDUX_STORE__ 사용
  */
 
-import { configureStore, combineReducers, createSlice, PayloadAction, Reducer } from '@reduxjs/toolkit';
+import { configureStore, combineReducers, createSlice, PayloadAction, Reducer, createSelector } from '@reduxjs/toolkit';
 import { storage } from '../utils/storage';
-import { User, AppState } from '../types';
+import { User, AppState, HostStore } from '../types';
+import menuReducer from './menu-slice';
+import recentMenuReducer from './recent-menu-slice';
 
 // ============================================
 // App Slice (인증 상태 관리)
@@ -67,11 +69,50 @@ export const {
     logout,
 } = appSlice.actions;
 
-// Selectors
+// ============================================
+// Selectors (기본)
+// ============================================
+export const selectAppState = (state: { app: AppState }) => state.app;
 export const selectAccessToken = (state: { app: AppState }) => state.app.accessToken;
 export const selectUser = (state: { app: AppState }) => state.app.user;
 export const selectIsLoading = (state: { app: AppState }) => state.app.isLoading;
-export const selectIsAuthenticated = (state: { app: AppState }) => !!state.app.accessToken;
+export const selectGlobalLoadingTitle = (state: { app: AppState }) => state.app.globalLoadingTitle;
+export const selectService = (state: { app: AppState }) => state.app.service;
+export const selectAppSelectedGnb = (state: { app: AppState }) => state.app.selectedGnb;
+
+// ============================================
+// Selectors (파생 - createSelector 활용)
+// ============================================
+
+/** 인증 여부 (메모이제이션) */
+export const selectIsAuthenticated = createSelector(
+    [selectAccessToken],
+    (token) => !!token
+);
+
+/** 사용자 역할 */
+export const selectUserRole = createSelector(
+    [selectUser],
+    (user) => user?.role || 'guest'
+);
+
+/** 관리자 여부 */
+export const selectIsAdmin = createSelector(
+    [selectUser],
+    (user) => user?.role === 'admin'
+);
+
+/** 사용자 권한 목록 */
+export const selectUserPermissions = createSelector(
+    [selectUser],
+    (user) => user?.permissions || []
+);
+
+/** 로딩 상태 (제목 포함) */
+export const selectLoadingState = createSelector(
+    [selectIsLoading, selectGlobalLoadingTitle],
+    (isLoading, title) => ({ isLoading, title })
+);
 
 // ============================================
 // Store 생성
@@ -80,9 +121,11 @@ export const selectIsAuthenticated = (state: { app: AppState }) => !!state.app.a
 // 동적 Reducer 저장소
 let dynamicReducers: Record<string, Reducer> = {};
 
-// 기본 Reducer
+// 기본 Reducer (KOMCA 패턴 - 관심사 분리)
 const staticReducers = {
     app: appSlice.reducer,
+    menu: menuReducer,
+    recentMenu: recentMenuReducer,
 };
 
 // Root Reducer 생성
@@ -150,9 +193,9 @@ export const injectReducer = (key: string, reducer: Reducer) => {
     }
     dynamicReducers[key] = reducer;
 
-    const store = getStore();
-    if (store && 'replaceReducer' in store) {
-        (store as any).replaceReducer(createRootReducer());
+    const currentStore = getStore();
+    if (currentStore && 'replaceReducer' in currentStore) {
+        (currentStore as HostStore).replaceReducer(createRootReducer());
     }
 };
 
@@ -161,7 +204,7 @@ export const injectReducer = (key: string, reducer: Reducer) => {
  */
 export const exposeStore = (store: ReturnType<typeof configureStore>) => {
     storage.setHostApp();
-    window.__REDUX_STORE__ = store as any;
+    window.__REDUX_STORE__ = store as HostStore;
 };
 
 // 타입 export

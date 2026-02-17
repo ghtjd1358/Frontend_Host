@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Session, AuthChangeEvent } from '@supabase/supabase-js';
 import { getSupabase } from '../network/supabase-client';
-import { dispatchToHost } from '../store/store-access';
+import { getStore, setAccessToken, setUser, logout } from '../store/app-store';
 import { storage } from '../utils/storage';
 import { User } from '../types';
 
@@ -36,6 +36,8 @@ export function useSupabaseLogin() {
 
     try {
       const supabase = getSupabase();
+      const store = getStore();
+
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -52,8 +54,8 @@ export function useSupabaseLogin() {
       const user = mapSupabaseUser(data.user);
 
       // Redux store 업데이트
-      dispatchToHost({ type: 'app/setAccessToken', payload: data.session.access_token });
-      dispatchToHost({ type: 'app/setUser', payload: user });
+      store.dispatch(setAccessToken(data.session.access_token));
+      store.dispatch(setUser(user));
 
       // Storage에도 저장 (backup)
       storage.setAccessToken(data.session.access_token);
@@ -80,11 +82,13 @@ export function useSupabaseLogin() {
 export function useSupabaseLogout() {
   const [isLoading, setIsLoading] = useState(false);
 
-  const logout = useCallback(async () => {
+  const doLogout = useCallback(async () => {
     setIsLoading(true);
 
     try {
       const supabase = getSupabase();
+      const store = getStore();
+
       const { error } = await supabase.auth.signOut();
 
       if (error) {
@@ -92,9 +96,8 @@ export function useSupabaseLogout() {
       }
 
       // Redux store 초기화
-      dispatchToHost({ type: 'app/setAccessToken', payload: '' });
-      dispatchToHost({ type: 'app/setUser', payload: null });
-      dispatchToHost({ type: 'recentMenu/resetRecentMenu' });
+      store.dispatch(logout());
+      store.dispatch({ type: 'recentMenu/resetRecentMenu' });
 
       // Storage 초기화
       storage.clearAuth();
@@ -102,14 +105,13 @@ export function useSupabaseLogout() {
       console.log('[Supabase Logout] 로그아웃 완료');
     } catch (err) {
       console.error('[Supabase Logout] 로그아웃 실패:', err);
-      // 에러가 발생해도 로컬 상태는 초기화
       storage.clearAuth();
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  return { logout, isLoading };
+  return { logout: doLogout, isLoading };
 }
 
 /**
@@ -154,6 +156,7 @@ export function useSupabaseSession() {
 export function useSupabaseAuthSync() {
   useEffect(() => {
     const supabase = getSupabase();
+    const store = getStore();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event: AuthChangeEvent, session: Session | null) => {
@@ -161,13 +164,12 @@ export function useSupabaseAuthSync() {
 
         if (session) {
           const user = mapSupabaseUser(session.user);
-          dispatchToHost({ type: 'app/setAccessToken', payload: session.access_token });
-          dispatchToHost({ type: 'app/setUser', payload: user });
+          store.dispatch(setAccessToken(session.access_token));
+          store.dispatch(setUser(user));
           storage.setAccessToken(session.access_token);
           storage.setUser(user);
         } else {
-          dispatchToHost({ type: 'app/setAccessToken', payload: '' });
-          dispatchToHost({ type: 'app/setUser', payload: null });
+          store.dispatch(logout());
           storage.clearAuth();
         }
       }
@@ -176,4 +178,3 @@ export function useSupabaseAuthSync() {
     return () => subscription.unsubscribe();
   }, []);
 }
-

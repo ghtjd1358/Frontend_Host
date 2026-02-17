@@ -5,20 +5,12 @@
 
 import { User, HostStore, HostRootState } from '../types';
 import { Reducer } from '@reduxjs/toolkit';
-import { store } from './app-store';
 
 /**
  * Host Store 가져오기
- * - Host 또는 Remote(Host 내부): window.__REDUX_STORE__ 사용
- * - Remote 단독 실행: lib의 store 사용 (fallback)
  */
 export const getHostStore = (): HostStore | undefined => {
-  // Host의 store가 있으면 사용
-  if (window.__REDUX_STORE__) {
-    return window.__REDUX_STORE__;
-  }
-  // 없으면 lib의 기본 store 사용 (Remote 단독 실행 시)
-  return store as unknown as HostStore;
+  return window.__REDUX_STORE__;
 };
 
 /**
@@ -136,8 +128,8 @@ export const subscribeToHost = (listener: () => void): (() => void) => {
  */
 export const injectReducerToHost = (key: string, reducer: Reducer): void => {
   // Host의 window에 노출된 injectReducer 함수 호출
-  if (typeof (window as any).__INJECT_REDUCER__ === 'function') {
-    (window as any).__INJECT_REDUCER__(key, reducer);
+  if (typeof window.__INJECT_REDUCER__ === 'function') {
+    window.__INJECT_REDUCER__(key, reducer);
   } else {
     console.warn('Host injectReducer not available');
   }

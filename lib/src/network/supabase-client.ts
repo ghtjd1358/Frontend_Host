@@ -44,29 +44,15 @@ export function initSupabase(config: SupabaseClientConfig): SupabaseClient {
 }
 
 /**
- * 환경 변수로 Supabase 클라이언트 초기화
- */
-export function initSupabaseFromEnv(): SupabaseClient {
-  const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
-  const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error(
-      '[Supabase] 환경 변수가 설정되지 않았습니다. ' +
-      'REACT_APP_SUPABASE_URL, REACT_APP_SUPABASE_ANON_KEY를 확인해주세요.'
-    );
-  }
-
-  return initSupabase({ supabaseUrl, supabaseAnonKey });
-}
-
-/**
  * Supabase 클라이언트 가져오기
- * 초기화되지 않은 경우 환경 변수로 자동 초기화
+ * 반드시 initSupabase()로 먼저 초기화해야 함
  */
 export function getSupabase(): SupabaseClient {
   if (!supabaseInstance) {
-    return initSupabaseFromEnv();
+    throw new Error(
+      '[Supabase] 클라이언트가 초기화되지 않았습니다. ' +
+      'initSupabase()를 먼저 호출해주세요.'
+    );
   }
   return supabaseInstance;
 }

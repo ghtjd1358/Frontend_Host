@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__plugin_claude-mem_mcp-search__search",
+      "Bash(cd:*)",
+      "Bash(ls:*)",
+      "Bash(npm start)",
+      "Bash(npm install:*)"
+    ]
+  }
+}

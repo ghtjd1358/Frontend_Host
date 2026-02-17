@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(node -e \"\nconst fs = require(''fs'');\nconst content = \\`import React from ''react''\nimport ReactDOM from ''react-dom/client''\nimport { Provider } from ''react-redux''\nimport { BrowserRouter } from ''react-router-dom''\nimport { createAppStore, ToastProvider, ModalProvider, storage, initSupabase } from ''@sonhoseong/mfa-lib''\nimport Root from ''./Root''\nimport ''./styles/global.css''\n\n// 단독 실행 시 Supabase 초기화\nif (!storage.isHostApp()) {\n    initSupabase({\n        supabaseUrl: process.env.REACT_APP_SUPABASE_URL!,\n        supabaseAnonKey: process.env.REACT_APP_SUPABASE_ANON_KEY!,\n    });\n}\n\nconst store = createAppStore()\n\n// 단독 실행 시 store를 window에 노출 (dispatchToHost가 작동하도록)\nif (!window.__REDUX_STORE__) {\n    window.__REDUX_STORE__ = store as any\n}\n\nasync function start() {\n    const rootElement = document.getElementById(''root'')\n    if (!rootElement) throw new Error(''Root element not found'')\n\n    // 단독 실행 시 body에 standalone 클래스 추가\n    if (!storage.isHostApp()) {\n        document.body.classList.add(''standalone'')\n    }\n\n    ReactDOM.createRoot(rootElement).render(\n        <React.StrictMode>\n            <Provider store={store}>\n                <ToastProvider>\n                    <ModalProvider>\n                        <BrowserRouter>\n                            <Root />\n                        </BrowserRouter>\n                    </ModalProvider>\n                </ToastProvider>\n            </Provider>\n        </React.StrictMode>\n    )\n}\n\nstart()\n\\`;\nfs.writeFileSync(''bootstrap.tsx'', content);\nconsole.log(''Done'');\n\")",
+      "Bash(node -e:*)",
+      "Bash(printf:*)",
+      "Bash(\"C:/Coding/개인포트폴리오(Persnal)/mfa/remote2/src/components/editor/TiptapEditor.tsx\")",
+      "Bash(\"C:/Coding/개인포트폴리오(Persnal)/mfa/remote2/src/components/index.ts\")"
+    ]
+  }
+}

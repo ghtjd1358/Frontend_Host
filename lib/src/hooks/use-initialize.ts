@@ -5,7 +5,7 @@
 
 import { useEffect, useState } from 'react';
 import { Session, AuthChangeEvent } from '@supabase/supabase-js';
-import { getHostStore, dispatchToHost } from '../store/store-access';
+import { getStore, setAccessToken, setUser, logout } from '../store/app-store';
 import { storage } from '../utils/storage';
 import { User } from '../types';
 import { getSupabase } from '../network/supabase-client';
@@ -25,13 +25,9 @@ function mapSupabaseUser(supabaseUser: any): User {
 
 // 초기화 옵션
 export interface InitializeOptions {
-  // 토큰 갱신 함수
   refreshToken?: () => Promise<string | null>;
-  // 사용자 정보 조회 함수
   fetchUserInfo?: () => Promise<User | null>;
-  // 초기화 완료 후 콜백
   onInitialized?: () => void;
-  // 에러 발생시 콜백
   onError?: (error: Error) => void;
 }
 
@@ -47,33 +43,30 @@ export function useInitialize(options: InitializeOptions = {}) {
     const initialize = async () => {
       try {
         setLoading(true);
+        const store = getStore();
 
-        // 1. Storage에서 기존 토큰 복구
         const savedToken = storage.getAccessToken();
         const savedUser = storage.getUser();
 
         if (savedToken) {
-          // Store에 복구
-          dispatchToHost({ type: 'app/setAccessToken', payload: savedToken });
+          store.dispatch(setAccessToken(savedToken));
 
           if (savedUser) {
-            dispatchToHost({ type: 'app/setUser', payload: savedUser });
+            store.dispatch(setUser(savedUser));
           }
 
-          // 2. 토큰 갱신 시도 (옵션)
           if (options.refreshToken) {
             try {
               const newToken = await options.refreshToken();
               if (newToken) {
-                dispatchToHost({ type: 'app/setAccessToken', payload: newToken });
+                store.dispatch(setAccessToken(newToken));
                 storage.setAccessToken(newToken);
                 console.log('[Initialize] 토큰 갱신 성공');
 
-                // 3. 사용자 정보 갱신 (옵션)
                 if (options.fetchUserInfo) {
                   const userInfo = await options.fetchUserInfo();
                   if (userInfo) {
-                    dispatchToHost({ type: 'app/setUser', payload: userInfo });
+                    store.dispatch(setUser(userInfo));
                     storage.setUser(userInfo);
                     console.log('[Initialize] 사용자 정보 갱신:', userInfo.email);
                   }
@@ -85,13 +78,10 @@ export function useInitialize(options: InitializeOptions = {}) {
           }
         }
 
-        // 4. Recent Menu 복구
+        // Recent Menu 복구
         const savedRecentMenu = storage.getRecentMenu();
         if (savedRecentMenu.length > 0) {
-          dispatchToHost({
-            type: 'recentMenu/setRecentMenu',
-            payload: { list: savedRecentMenu },
-          });
+          store.dispatch({ type: 'recentMenu/setRecentMenu', payload: { list: savedRecentMenu } });
         }
 
         setInitialized(true);
@@ -115,30 +105,26 @@ export function useInitialize(options: InitializeOptions = {}) {
 
 /**
  * 간단한 초기화 Hook (토큰/사용자 정보 복구만)
- * @deprecated Supabase 사용 시 useSupabaseSimpleInitialize 사용 권장
  */
 export function useSimpleInitialize() {
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    // Storage에서 복구
+    const store = getStore();
+
     const savedToken = storage.getAccessToken();
     const savedUser = storage.getUser();
 
     if (savedToken) {
-      dispatchToHost({ type: 'app/setAccessToken', payload: savedToken });
+      store.dispatch(setAccessToken(savedToken));
     }
     if (savedUser) {
-      dispatchToHost({ type: 'app/setUser', payload: savedUser });
+      store.dispatch(setUser(savedUser));
     }
 
-    // Recent Menu 복구
     const savedRecentMenu = storage.getRecentMenu();
     if (savedRecentMenu.length > 0) {
-      dispatchToHost({
-        type: 'recentMenu/setRecentMenu',
-        payload: { list: savedRecentMenu },
-      });
+      store.dispatch({ type: 'recentMenu/setRecentMenu', payload: { list: savedRecentMenu } });
     }
 
     setInitialized(true);
@@ -158,28 +144,67 @@ export function useSupabaseInitialize() {
     let cleanup: (() => void) | undefined;
 
     const initialize = async () => {
+      const store = getStore();
+
       try {
-        const supabase = getSupabase();
+        // Supabase 클라이언트 가져오기 (없으면 fallback)
+        let supabase;
+        try {
+          supabase = getSupabase();
+        } catch {
+          // Supabase가 초기화되지 않은 경우 localStorage에서 복구
+          console.warn('[Supabase Init] Supabase 미초기화, localStorage fallback');
+          const savedToken = storage.getAccessToken();
+          const savedUser = storage.getUser();
+
+          if (savedToken) {
+            store.dispatch(setAccessToken(savedToken));
+          }
+          if (savedUser) {
+            store.dispatch(setUser(savedUser));
+          }
+
+          // Recent Menu 복구
+          const savedRecentMenu = storage.getRecentMenu();
+          if (savedRecentMenu.length > 0) {
+            store.dispatch({ type: 'recentMenu/setRecentMenuList', payload: savedRecentMenu });
+          }
+
+          setInitialized(true);
+          return;
+        }
 
         // 1. 현재 세션 확인
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabase.auth.getSession();
+
+        if (error) {
+          console.warn('[Supabase Init] 세션 가져오기 실패:', error.message);
+        }
 
         if (session) {
           const user = mapSupabaseUser(session.user);
-          dispatchToHost({ type: 'app/setAccessToken', payload: session.access_token });
-          dispatchToHost({ type: 'app/setUser', payload: user });
+          store.dispatch(setAccessToken(session.access_token));
+          store.dispatch(setUser(user));
           storage.setAccessToken(session.access_token);
           storage.setUser(user);
           console.log('[Supabase Init] 세션 복구:', user.email);
+        } else {
+          // 세션 없으면 localStorage에서 복구 시도
+          const savedToken = storage.getAccessToken();
+          const savedUser = storage.getUser();
+
+          if (savedToken) {
+            store.dispatch(setAccessToken(savedToken));
+          }
+          if (savedUser) {
+            store.dispatch(setUser(savedUser));
+          }
         }
 
         // 2. Recent Menu 복구
         const savedRecentMenu = storage.getRecentMenu();
         if (savedRecentMenu.length > 0) {
-          dispatchToHost({
-            type: 'recentMenu/setRecentMenu',
-            payload: { list: savedRecentMenu },
-          });
+          store.dispatch({ type: 'recentMenu/setRecentMenuList', payload: savedRecentMenu });
         }
 
         // 3. Auth 상태 변경 구독
@@ -187,13 +212,12 @@ export function useSupabaseInitialize() {
           (event: AuthChangeEvent, session: Session | null) => {
             if (session) {
               const user = mapSupabaseUser(session.user);
-              dispatchToHost({ type: 'app/setAccessToken', payload: session.access_token });
-              dispatchToHost({ type: 'app/setUser', payload: user });
+              store.dispatch(setAccessToken(session.access_token));
+              store.dispatch(setUser(user));
               storage.setAccessToken(session.access_token);
               storage.setUser(user);
             } else if (event === 'SIGNED_OUT') {
-              dispatchToHost({ type: 'app/setAccessToken', payload: '' });
-              dispatchToHost({ type: 'app/setUser', payload: null });
+              store.dispatch(logout());
               storage.clearAuth();
             }
           }
@@ -203,7 +227,19 @@ export function useSupabaseInitialize() {
         setInitialized(true);
       } catch (err) {
         console.error('[Supabase Init] 초기화 실패:', err);
-        setInitialized(true); // 에러가 발생해도 앱은 시작
+
+        // 에러 발생해도 localStorage에서 복구 시도
+        const savedToken = storage.getAccessToken();
+        const savedUser = storage.getUser();
+
+        if (savedToken) {
+          store.dispatch(setAccessToken(savedToken));
+        }
+        if (savedUser) {
+          store.dispatch(setUser(savedUser));
+        }
+
+        setInitialized(true);
       }
     };
 

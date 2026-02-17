@@ -4,9 +4,9 @@
  */
 
 import { useCallback } from 'react';
-import { getHostStore, dispatchToHost } from '../store/store-access';
+import { getStore, setAccessToken, setUser, logout } from '../store/app-store';
 import { storage } from '../utils/storage';
-import { User } from '../types';
+import { User, HostRootState } from '../types';
 
 // 로그인 응답 타입
 export interface LoginResponse {
@@ -36,10 +36,10 @@ export type RefreshFn = () => Promise<string | null>;
 export function useLogin(loginApi?: LoginFn) {
   return useCallback(async (request: LoginRequest): Promise<LoginResponse | null> => {
     try {
+      const store = getStore();
       let response: LoginResponse;
 
       if (loginApi) {
-        // 실제 API 호출
         response = await loginApi(request);
       } else {
         // Mock 로그인 (개발용)
@@ -59,8 +59,8 @@ export function useLogin(loginApi?: LoginFn) {
       }
 
       // Store에 저장
-      dispatchToHost({ type: 'app/setAccessToken', payload: response.accessToken });
-      dispatchToHost({ type: 'app/setUser', payload: response.user });
+      store.dispatch(setAccessToken(response.accessToken));
+      store.dispatch(setUser(response.user));
 
       // Storage에도 저장 (새로고침 대비)
       storage.setAccessToken(response.accessToken);
@@ -81,15 +81,16 @@ export function useLogin(loginApi?: LoginFn) {
 export function useLogout(logoutApi?: LogoutFn) {
   return useCallback(async (): Promise<void> => {
     try {
+      const store = getStore();
+
       // API 호출 (있는 경우)
       if (logoutApi) {
         await logoutApi();
       }
 
       // Store 초기화
-      dispatchToHost({ type: 'app/setAccessToken', payload: '' });
-      dispatchToHost({ type: 'app/setUser', payload: null });
-      dispatchToHost({ type: 'recentMenu/resetRecentMenu' });
+      store.dispatch(logout());
+      store.dispatch({ type: 'recentMenu/resetRecentMenu' });
 
       // Storage 초기화
       storage.clearAuth();
@@ -97,7 +98,6 @@ export function useLogout(logoutApi?: LogoutFn) {
       console.log('[Logout] 로그아웃 완료');
     } catch (error) {
       console.error('[Logout] 로그아웃 실패:', error);
-      // 에러가 발생해도 로컬 상태는 초기화
       storage.clearAuth();
       throw error;
     }
@@ -110,6 +110,8 @@ export function useLogout(logoutApi?: LogoutFn) {
 export function useTokenRefresh(refreshApi?: RefreshFn) {
   return useCallback(async (): Promise<string | null> => {
     try {
+      const store = getStore();
+
       if (!refreshApi) {
         console.warn('[Token Refresh] refresh API가 설정되지 않았습니다.');
         return null;
@@ -118,8 +120,7 @@ export function useTokenRefresh(refreshApi?: RefreshFn) {
       const newToken = await refreshApi();
 
       if (newToken) {
-        // Store에 저장
-        dispatchToHost({ type: 'app/setAccessToken', payload: newToken });
+        store.dispatch(setAccessToken(newToken));
         storage.setAccessToken(newToken);
         console.log('[Token Refresh] 토큰 갱신 성공');
         return newToken;
@@ -128,8 +129,8 @@ export function useTokenRefresh(refreshApi?: RefreshFn) {
       return null;
     } catch (error) {
       console.error('[Token Refresh] 토큰 갱신 실패:', error);
-      // 갱신 실패시 로그아웃 처리
-      dispatchToHost({ type: 'app/setAccessToken', payload: '' });
+      const store = getStore();
+      store.dispatch(setAccessToken(''));
       storage.setAccessToken('');
       throw error;
     }
@@ -140,8 +141,8 @@ export function useTokenRefresh(refreshApi?: RefreshFn) {
  * 인증 상태 확인 Hook
  */
 export function useAuthState() {
-  const store = getHostStore();
-  const state = store?.getState();
+  const store = getStore();
+  const state = store?.getState() as HostRootState | undefined;
 
   return {
     isAuthenticated: !!state?.app?.accessToken,
