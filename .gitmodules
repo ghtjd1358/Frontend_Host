@@ -1,0 +1,11 @@
+[submodule "remote1"]
+	path = remote1
+	url = https://github.com/ghtjd1358/Frontend_Remote_Resume.git
+
+[submodule "remote2"]
+	path = remote2
+	url = https://github.com/ghtjd1358/Frontend_Remote_Blog.git
+
+[submodule "remote3"]
+	path = remote3
+	url = https://github.com/ghtjd1358/Frontend_Remote_Portfolio.git
