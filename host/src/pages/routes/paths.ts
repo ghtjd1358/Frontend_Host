@@ -1,9 +1,10 @@
 /**
- * Host Route Paths (단순화)
+ * Host Route Paths
+ * /container prefix 사용
  */
 export enum RoutePath {
-    Dashboard = '/dashboard',
-    Resume = '/resume',
-    Blog = '/blog',
+    Dashboard = '/container/dashboard',
+    Resume = '/container/resume',
+    Blog = '/container/blog',
     Login = '/login',
 }

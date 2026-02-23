@@ -35,19 +35,19 @@ export const lnbItems: LnbMenuItem[] = [
     {
         id: 'dashboard',
         title: '대시보드',
-        path: '/dashboard',
+        path: '/container/dashboard',
         icon: dashboardIcon,
     },
     {
         id: 'resume',
         title: '이력서',
-        path: '/resume',
+        path: '/container/resume',
         icon: resumeIcon,
     },
     {
         id: 'blog',
         title: '블로그',
-        path: '/blog',
+        path: '/container/blog',
         icon: blogIcon,
     },
 ];

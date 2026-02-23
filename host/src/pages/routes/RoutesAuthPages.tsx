@@ -45,9 +45,9 @@ const BlogApp = React.lazy(() =>
   }))
 );
 
-// Remote pathPrefix (안전한 로딩)
-let resumePathPrefix = '/resume'; // 기본값
-let blogPathPrefix = '/blog'; // 기본값
+// Remote pathPrefix (안전한 로딩) - /container prefix 포함
+let resumePathPrefix = '/container/resume'; // 기본값
+let blogPathPrefix = '/container/blog'; // 기본값
 
 // top-level await로 pathPrefix 로드 (실패 시 기본값 사용)
 try {
