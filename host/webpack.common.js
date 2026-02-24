@@ -153,7 +153,11 @@ module.exports = {
         'react-router-dom': { singleton: true, eager: true },
         '@reduxjs/toolkit': { singleton: true, eager: true },
         'react-redux': { singleton: true, eager: true },
-        '@sonhoseong/mfa-lib': { singleton: true, eager: false, import: false }
+        '@sonhoseong/mfa-lib': {
+          singleton: true,
+          eager: true,
+          requiredVersion: '^1.3.8'
+        }
       }
 
     }),
