@@ -295,14 +295,351 @@ taskkill /F /IM node.exe
 
 ---
 
-## 라우팅
+## 라우팅 아키텍처 (KOMCA 패턴)
 
-| 경로 | 페이지 | Remote |
-|------|--------|--------|
-| `/` | 이력서 | @resume |
-| `/@blog` | 블로그 | @blog |
-| `/@portfolio` | 포트폴리오 | @portfolio |
-| `/@login` | 로그인 | Host 내부 |
+### 개요
+
+MFA에서 가장 중요한 부분은 **Host 통합 실행**과 **단독 실행** 시 라우팅이 모두 정상 작동해야 한다는 것입니다.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     Host 통합 실행                               │
+│  URL: http://localhost:5000/blog/post/123                       │
+│                                                                  │
+│  1. Host Router: /blog/* → BlogApp 위임                         │
+│  2. Remote2가 받는 경로: /post/123 (상대 경로)                   │
+│  3. Remote2 Router: /post/:slug → 매칭 성공                     │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                     단독 실행                                    │
+│  URL: http://localhost:5002/blog/post/123                       │
+│                                                                  │
+│  1. Remote2 Router: /blog/post/:slug → 매칭 성공                │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### PREFIX 동적 계산
+
+각 Remote 앱은 실행 컨텍스트에 따라 PREFIX를 동적으로 계산합니다.
+
+```typescript
+// 각 컴포넌트에서 직접 계산
+import { storage } from '@sonhoseong/mfa-lib';
+
+// Host 통합 시: '' (빈 문자열)
+// 단독 실행 시: '/blog'
+const PREFIX = storage.isHostApp() ? '' : '/blog';
+```
+
+### Host 앱 플래그 설정
+
+Host는 bootstrap 시점에 플래그를 설정합니다.
+
+```typescript
+// host/src/bootstrap.tsx
+import { storage } from '@sonhoseong/mfa-lib';
+
+storage.setHostApp();  // sessionStorage에 'isHostApp'='true' 설정
+```
+
+Remote는 단독 실행 시 플래그를 제거합니다.
+
+```typescript
+// remote2/src/init.tsx
+import { storage } from '@sonhoseong/mfa-lib';
+
+storage.removeHostApp();  // 단독 실행임을 명시
+```
+
+### 라우트 정의 패턴
+
+```typescript
+// remote2/src/pages/routes/RoutesGuestPages.tsx
+const PREFIX = storage.isHostApp() ? '' : '/blog';
+
+function RoutesGuestPages() {
+    return (
+        <Routes>
+            {/* 메인 */}
+            <Route path="/" element={<BlogList />} />
+            {PREFIX && <Route path={PREFIX} element={<BlogList />} />}
+
+            {/* 상세 페이지 */}
+            <Route path={`${PREFIX}/post/:slug`} element={<PostDetail />} />
+
+            {/* 기타 */}
+            <Route path="*" element={<BlogList />} />
+        </Routes>
+    );
+}
+```
+
+### 경로 매핑 테이블
+
+| 앱 | 실행 환경 | PREFIX | 예시 URL | 실제 라우트 |
+|----|----------|--------|----------|------------|
+| remote2 | Host 통합 | `''` | `/blog/post/123` | `/post/:slug` |
+| remote2 | 단독 | `'/blog'` | `/blog/post/123` | `/blog/post/:slug` |
+| remote1 | Host 통합 | `''` | `/resume/admin/skills` | `/admin/skills` |
+| remote1 | 단독 | `'/resume'` | `/resume/admin/skills` | `/resume/admin/skills` |
+
+---
+
+## 인증 및 토큰 관리
+
+### 토큰 저장 구조
+
+```typescript
+// @sonhoseong/mfa-lib의 storage 유틸리티
+export const storage = {
+    // Access Token (localStorage)
+    getAccessToken: () => localStorage.getItem('accessToken'),
+    setAccessToken: (token) => localStorage.setItem('accessToken', token),
+
+    // User 정보 (localStorage)
+    getUser: () => JSON.parse(localStorage.getItem('user')),
+    setUser: (user) => localStorage.setItem('user', JSON.stringify(user)),
+
+    // Host 앱 여부 (sessionStorage)
+    isHostApp: () => sessionStorage.getItem('isHostApp') === 'true',
+    setHostApp: () => sessionStorage.setItem('isHostApp', 'true'),
+    removeHostApp: () => sessionStorage.removeItem('isHostApp'),
+};
+```
+
+### 초기화 흐름
+
+```
+[앱 시작]
+    │
+    ▼
+┌─────────────────────────────────────────┐
+│ init.tsx (단독 실행 시에만)              │
+│ - storage.removeHostApp() 호출          │
+└─────────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────────┐
+│ bootstrap.tsx                           │
+│ - Redux Store 생성                      │
+│ - BrowserRouter 설정                    │
+│ - Provider 구성                         │
+└─────────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────────┐
+│ Root.tsx (useLocalInitialize)           │
+│ - localStorage에서 토큰 로드            │
+│ - Redux Store에 토큰/유저 정보 dispatch │
+│ - initialized = true                    │
+└─────────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────────┐
+│ App.tsx                                 │
+│ - isAuthenticated 확인                  │
+│ - RoutesGuestPages 또는 RoutesAuthPages │
+└─────────────────────────────────────────┘
+```
+
+### Root 컴포넌트 초기화
+
+```typescript
+// remote2/src/Root.tsx
+function useLocalInitialize() {
+    const [initialized, setInitialized] = useState(false);
+
+    useEffect(() => {
+        try {
+            const store = getStore();
+            const savedToken = storage.getAccessToken();
+            const savedUser = storage.getUser();
+
+            if (savedToken) {
+                store.dispatch(setAccessToken(savedToken));
+            }
+            if (savedUser) {
+                store.dispatch(setUser(savedUser));
+            }
+        } finally {
+            setInitialized(true);
+        }
+    }, []);
+
+    return { initialized };
+}
+```
+
+### Redux Store 공유 (Module Federation)
+
+```javascript
+// webpack.common.js
+new ModuleFederationPlugin({
+    shared: {
+        react: { singleton: true },
+        'react-dom': { singleton: true },
+        'react-router-dom': { singleton: true },
+        '@reduxjs/toolkit': { singleton: true },
+        'react-redux': { singleton: true },
+        '@sonhoseong/mfa-lib': { singleton: true }  // 토큰 관리 포함
+    }
+})
+```
+
+---
+
+## 로딩 처리
+
+### 1. 앱 초기화 로딩 (Root)
+
+```typescript
+// Root.tsx
+if (!initialized) {
+    return (
+        <div className="app-loading">
+            <div className="loading-spinner" />
+            <p>로딩 중...</p>
+        </div>
+    );
+}
+```
+
+### 2. 라우트 전환 로딩 (Suspense)
+
+```typescript
+// App.tsx
+const PageLoadingFallback = () => (
+    <DeferredComponent delay={150}>
+        <div className="page-loading-skeleton">
+            <div className="skeleton skeleton-hero" />
+            <div className="skeleton-cards">
+                <div className="skeleton skeleton-card" />
+                <div className="skeleton skeleton-card" />
+            </div>
+        </div>
+    </DeferredComponent>
+);
+
+function App() {
+    return (
+        <Suspense fallback={<PageLoadingFallback />}>
+            {!isAuthenticated && <RoutesGuestPages />}
+            {isAuthenticated && <RoutesAuthPages />}
+        </Suspense>
+    );
+}
+```
+
+### 3. Remote 앱 로딩 (Host)
+
+```typescript
+// host/src/pages/routes/RoutesAuthPages.tsx
+const BlogApp = React.lazy(() =>
+    import('@blog/App').catch(() => ({
+        default: () => null  // 로드 실패 시 빈 컴포넌트
+    }))
+);
+
+<Route
+    path={`${blogPathPrefix}/*`}
+    element={
+        <RemoteErrorBoundary remoteName="블로그">
+            <Suspense fallback={<RemoteLoadingFallback />}>
+                <BlogApp />
+            </Suspense>
+        </RemoteErrorBoundary>
+    }
+/>
+```
+
+### 4. DeferredComponent (플리커 방지)
+
+```typescript
+// @sonhoseong/mfa-lib
+const DeferredComponent = ({ delay = 150, children }) => {
+    const [show, setShow] = useState(false);
+
+    useEffect(() => {
+        const timer = setTimeout(() => setShow(true), delay);
+        return () => clearTimeout(timer);
+    }, [delay]);
+
+    return show ? children : null;
+};
+```
+
+- 150ms 미만의 빠른 로딩에서는 스켈레톤 UI를 보여주지 않음
+- 사용자 경험 향상 (불필요한 깜빡임 방지)
+
+---
+
+## LNB (사이드 메뉴) 통합
+
+### Remote에서 LNB Items 제공
+
+```typescript
+// remote2/src/exposes/lnb-items.tsx
+export const pathPrefix = '/blog';  // Host가 사용할 prefix
+
+export const lnbItems = {
+    hasPrefixList: [
+        { id: 'blog-home', title: '블로그', path: '/blog', icon: <Icon /> },
+    ],
+    hasPrefixAuthList: [
+        { id: 'blog-home', title: '블로그', path: '/blog', icon: <Icon /> },
+        { id: 'blog-write', title: '글쓰기', path: '/blog/write', icon: <Icon /> },
+    ],
+};
+```
+
+### Host에서 LNB 통합
+
+```typescript
+// host/src/components/Sidebar.tsx
+const { lnbItems: blogLnbItems } = await import('@blog/LnbItems');
+const { lnbItems: resumeLnbItems } = await import('@resume/LnbItems');
+
+const allMenuItems = [
+    ...resumeLnbItems.hasPrefixList,
+    ...blogLnbItems.hasPrefixList,
+];
+```
+
+---
+
+## 새로고침 처리 (SPA)
+
+### Webpack Dev Server
+
+```javascript
+// webpack.dev.js
+devServer: {
+    historyApiFallback: true,  // 모든 경로를 index.html로 리다이렉트
+}
+```
+
+### Vercel (vercel.json)
+
+```json
+{
+    "rewrites": [
+        {
+            "source": "/((?!remoteEntry|.*\\.js|.*\\.css|.*\\.map).*)",
+            "destination": "/index.html"
+        }
+    ]
+}
+```
+
+### publicPath 설정
+
+```javascript
+// webpack.common.js
+output: {
+    publicPath: '/',  // 'auto' 대신 명시적으로 '/' 설정
+}
+```
 
 ---
 

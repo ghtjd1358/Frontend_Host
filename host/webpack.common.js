@@ -82,7 +82,8 @@ module.exports = {
     filename: '[name].[contenthash].js',
     path:
         path.resolve(__dirname, 'dist'),
-    publicPath: 'auto',
+    // publicPath: 'auto' → 명시적으로 '/'로 설정 (Vercel 배포 호환)
+    publicPath: '/',
     clean: true
   },
   module: {

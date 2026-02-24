@@ -34,3 +34,16 @@ declare module '@blog/LnbItems' {
   export const lnbItems: RemoteLnbItems;
   export default lnbItems;
 }
+
+// Remote3: Portfolio 모듈 선언
+declare module '@portfolio/App' {
+  import { ComponentType } from 'react';
+  const App: ComponentType<Record<string, never>>;
+  export default App;
+}
+
+declare module '@portfolio/LnbItems' {
+  export const pathPrefix: string;
+  export const lnbItems: RemoteLnbItems;
+  export default lnbItems;
+}
