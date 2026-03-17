@@ -7,14 +7,11 @@ import React, { useState, isValidElement, cloneElement } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout, selectAccessToken, selectUser } from '../../store/app-store';
+import { LnbMenuItem } from '../../types';
 
-export interface LnbMenuItem {
-  id: string;
-  title: string;
-  path?: string;
-  icon?: React.ReactNode;
-  children?: Omit<LnbMenuItem, 'icon' | 'children'>[];
-}
+// LnbMenuItem 타입 re-export (하위 호환)
+export type { LnbMenuItem } from '../../types';
+
 
 export interface LnbProps {
   lnbItems: LnbMenuItem[];

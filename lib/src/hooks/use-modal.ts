@@ -96,27 +96,68 @@ export function useConfirmModal(): ConfirmModalResult {
 }
 
 /**
- * 비동기 Alert 모달 - 간편 사용
+ * 비동기 Alert 모달 - ModalContext 연동
+ * KOMCA 패턴 업그레이드: Context 기반으로 커스텀 모달 사용
+ *
+ * @example
+ * const alert = useAsyncAlert();
+ * await alert('저장되었습니다.');
+ * await alert('오류가 발생했습니다.', '오류');
  */
-export function useAsyncAlertModal() {
-  return useCallback((message: string, title?: string): Promise<void> => {
-    return new Promise((resolve) => {
-      // 브라우저 기본 alert 사용 (커스텀 모달로 교체 가능)
-      alert(title ? `${title}\n\n${message}` : message);
-      resolve();
-    });
+export function useAsyncAlert() {
+  // ModalContext를 직접 import하지 않고 동적으로 가져옴 (순환 참조 방지)
+  const getModalContext = useCallback(() => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { useModalContext } = require('../components/modal/ModalContext');
+      return useModalContext();
+    } catch {
+      return null;
+    }
   }, []);
+
+  return useCallback(async (message: string, title?: string): Promise<void> => {
+    const context = getModalContext();
+    if (context?.alert) {
+      return context.alert(message, title);
+    }
+    // fallback: 브라우저 기본 alert
+    alert(title ? `${title}\n\n${message}` : message);
+  }, [getModalContext]);
 }
 
 /**
- * 비동기 Confirm 모달 - 간편 사용
+ * 비동기 Confirm 모달 - ModalContext 연동
+ * KOMCA 패턴 업그레이드: Context 기반으로 커스텀 모달 사용
+ *
+ * @example
+ * const confirm = useAsyncConfirm();
+ * const result = await confirm('삭제하시겠습니까?');
+ * if (result) {
+ *   // 삭제 처리
+ * }
  */
-export function useAsyncConfirmModal() {
-  return useCallback((message: string, title?: string): Promise<boolean> => {
-    return new Promise((resolve) => {
-      // 브라우저 기본 confirm 사용 (커스텀 모달로 교체 가능)
-      const result = confirm(title ? `${title}\n\n${message}` : message);
-      resolve(result);
-    });
+export function useAsyncConfirm() {
+  const getModalContext = useCallback(() => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { useModalContext } = require('../components/modal/ModalContext');
+      return useModalContext();
+    } catch {
+      return null;
+    }
   }, []);
+
+  return useCallback(async (message: string, title?: string): Promise<boolean> => {
+    const context = getModalContext();
+    if (context?.confirm) {
+      return context.confirm(message, title);
+    }
+    // fallback: 브라우저 기본 confirm
+    return confirm(title ? `${title}\n\n${message}` : message);
+  }, [getModalContext]);
 }
+
+// 하위 호환성을 위한 alias
+export const useAsyncAlertModal = useAsyncAlert;
+export const useAsyncConfirmModal = useAsyncConfirm;

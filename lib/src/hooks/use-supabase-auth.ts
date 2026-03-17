@@ -178,3 +178,103 @@ export function useSupabaseAuthSync() {
     return () => subscription.unsubscribe();
   }, []);
 }
+
+/**
+ * 토큰 만료 전 선제 갱신 Hook
+ * KOMCA 스타일: 만료 5분 전 자동으로 토큰 갱신
+ * @param refreshBeforeMinutes 만료 전 갱신 시점 (분), 기본값 5분
+ */
+export function useTokenAutoRefresh(refreshBeforeMinutes: number = 5) {
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
+
+  useEffect(() => {
+    const supabase = getSupabase();
+    const store = getStore();
+    let timeoutId: NodeJS.Timeout | null = null;
+
+    const scheduleRefresh = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (!session?.expires_at) {
+          return;
+        }
+
+        const expiresAt = session.expires_at * 1000; // seconds to ms
+        const refreshTime = expiresAt - (refreshBeforeMinutes * 60 * 1000);
+        const now = Date.now();
+        const timeout = refreshTime - now;
+
+        // 이미 만료 시점이 지났으면 즉시 갱신
+        if (timeout <= 0) {
+          await performRefresh();
+          return;
+        }
+
+        // 만료 전 갱신 스케줄링
+        console.log(`[Token Auto Refresh] ${Math.round(timeout / 1000 / 60)}분 후 토큰 갱신 예정`);
+
+        timeoutId = setTimeout(async () => {
+          await performRefresh();
+        }, timeout);
+
+      } catch (err) {
+        console.error('[Token Auto Refresh] 스케줄링 실패:', err);
+      }
+    };
+
+    const performRefresh = async () => {
+      if (isRefreshing) return;
+
+      setIsRefreshing(true);
+
+      try {
+        const { data, error } = await supabase.auth.refreshSession();
+
+        if (error) {
+          throw error;
+        }
+
+        if (data.session) {
+          const user = mapSupabaseUser(data.session.user);
+          store.dispatch(setAccessToken(data.session.access_token));
+          store.dispatch(setUser(user));
+          storage.setAccessToken(data.session.access_token);
+          storage.setUser(user);
+
+          setLastRefreshed(new Date());
+          console.log('[Token Auto Refresh] 토큰 선제 갱신 완료');
+
+          // 다음 갱신 스케줄링
+          scheduleRefresh();
+        }
+      } catch (err) {
+        console.error('[Token Auto Refresh] 토큰 갱신 실패:', err);
+      } finally {
+        setIsRefreshing(false);
+      }
+    };
+
+    // 초기 스케줄링
+    scheduleRefresh();
+
+    // 세션 변경 시 재스케줄링
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event: AuthChangeEvent) => {
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          scheduleRefresh();
+        }
+      }
+    );
+
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      subscription.unsubscribe();
+    };
+  }, [refreshBeforeMinutes, isRefreshing]);
+
+  return { isRefreshing, lastRefreshed };
+}

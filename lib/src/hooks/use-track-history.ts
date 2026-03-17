@@ -171,10 +171,25 @@ export function useTrackHistory(options: TrackHistoryOptions) {
 
 /**
  * Recent Menu 상태 Hook
+ * useSelector를 사용하여 상태 변경 시 리렌더링 보장
  */
 export function useRecentMenuState<D = any>() {
   const store = getHostStore();
-  const state = store?.getState().recentMenu;
+
+  // useSelector 대신 useSyncExternalStore 패턴 사용 (Host store 구독)
+  const [state, setState] = useState(() => store?.getState().recentMenu);
+
+  useEffect(() => {
+    if (!store) return;
+
+    // Store 변경 구독
+    const unsubscribe = store.subscribe(() => {
+      const newState = store.getState().recentMenu;
+      setState(newState);
+    });
+
+    return unsubscribe;
+  }, [store]);
 
   const currentMenu = state?.list?.find(
     (menu: RecentMenu) => menu.id === state?.currentId

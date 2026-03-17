@@ -184,22 +184,29 @@ let factoryConfig: FactoryConfig | null = null;
 
 // ============================================
 // 토큰 갱신 큐 (동시 요청 시 중복 갱신 방지)
+// KOMCA 스타일 패턴: 동시 401 발생 시 하나만 갱신 요청
 // ============================================
 let isRefreshing = false;
-let refreshSubscribers: ((token: string) => void)[] = [];
+let refreshSubscribers: Array<{
+  resolve: (token: string) => void;
+  reject: (error: Error) => void;
+}> = [];
 
 /**
  * 토큰 갱신 대기 큐에 콜백 추가
+ * @returns Promise<string> 새 토큰
  */
-const subscribeTokenRefresh = (callback: (token: string) => void) => {
-  refreshSubscribers.push(callback);
+const subscribeTokenRefresh = (): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    refreshSubscribers.push({ resolve, reject });
+  });
 };
 
 /**
  * 토큰 갱신 완료 시 대기 중인 모든 요청에 새 토큰 전달
  */
 const onTokenRefreshed = (token: string) => {
-  refreshSubscribers.forEach(callback => callback(token));
+  refreshSubscribers.forEach(({ resolve }) => resolve(token));
   refreshSubscribers = [];
 };
 
@@ -207,8 +214,8 @@ const onTokenRefreshed = (token: string) => {
  * 토큰 갱신 실패 시 대기 중인 모든 요청 거부
  */
 const onTokenRefreshFailed = (error: Error) => {
+  refreshSubscribers.forEach(({ reject }) => reject(error));
   refreshSubscribers = [];
-  // 실패한 요청들은 원래 에러로 reject됨
 };
 
 // Factory 초기화
@@ -317,13 +324,14 @@ export class AxiosClientFactory {
 
           // 토큰 갱신 중이면 대기 큐에 추가
           if (isRefreshing) {
-            return new Promise((resolve, reject) => {
-              subscribeTokenRefresh((newToken: string) => {
-                originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
-                originalRequest._isRetry = true;
-                resolve(axiosInstance(originalRequest));
-              });
-            });
+            try {
+              const newToken = await subscribeTokenRefresh();
+              originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+              originalRequest._isRetry = true;
+              return axiosInstance(originalRequest);
+            } catch (refreshError) {
+              return Promise.reject(refreshError);
+            }
           }
 
           // 첫 번째 401 요청: 토큰 갱신 수행

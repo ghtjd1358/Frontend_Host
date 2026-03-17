@@ -4,9 +4,10 @@
  */
 
 import { useCallback } from 'react';
-import { getStore, setAccessToken, setUser, logout } from '../store/app-store';
+import { useSelector } from 'react-redux';
+import { getStore, setAccessToken, setUser, logout, selectAccessToken, selectUser } from '../store/app-store';
 import { storage } from '../utils/storage';
-import { User, HostRootState } from '../types';
+import { User } from '../types';
 
 // 로그인 응답 타입
 export interface LoginResponse {
@@ -139,14 +140,15 @@ export function useTokenRefresh(refreshApi?: RefreshFn) {
 
 /**
  * 인증 상태 확인 Hook
+ * useSelector를 사용하여 상태 변경시 리렌더링 보장
  */
 export function useAuthState() {
-  const store = getStore();
-  const state = store?.getState() as HostRootState | undefined;
+  const accessToken = useSelector(selectAccessToken);
+  const user = useSelector(selectUser);
 
   return {
-    isAuthenticated: !!state?.app?.accessToken,
-    user: state?.app?.user || null,
-    accessToken: state?.app?.accessToken || '',
+    isAuthenticated: !!accessToken,
+    user,
+    accessToken,
   };
 }

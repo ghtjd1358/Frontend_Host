@@ -30,3 +30,5 @@ export * from './router';
 
 // Remote (MFA 관련)
 export * from './remote';
+// Icons
+export * from './icons';
