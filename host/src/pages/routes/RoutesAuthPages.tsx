@@ -45,6 +45,14 @@ const BlogApp = React.lazy(() =>
   }))
 );
 
+// @ts-ignore
+const PortfolioApp = React.lazy(() =>
+  // @ts-ignore
+  import('@portfolio/App').catch(() => ({
+    default: () => null
+  }))
+);
+
 // @ts-ignore - 마이페이지 (Host 레벨)
 const MyPage = React.lazy(() =>
   // @ts-ignore
@@ -56,6 +64,7 @@ const MyPage = React.lazy(() =>
 // Remote pathPrefix (안전한 로딩) - /container prefix 포함
 let resumePathPrefix = '/container/resume'; // 기본값
 let blogPathPrefix = '/container/blog'; // 기본값
+let portfolioPathPrefix = '/container/portfolio'; // 기본값
 
 // top-level await로 pathPrefix 로드 (실패 시 기본값 사용)
 try {
@@ -72,6 +81,14 @@ try {
   blogPathPrefix = blogLnb.pathPrefix || blogPathPrefix;
 } catch (e) {
   console.warn('[MFA] Blog LnbItems 로드 실패, 기본값 사용:', blogPathPrefix);
+}
+
+try {
+  // @ts-ignore
+  const portfolioLnb = await import('@portfolio/LnbItems');
+  portfolioPathPrefix = portfolioLnb.pathPrefix || portfolioPathPrefix;
+} catch (e) {
+  console.warn('[MFA] Portfolio LnbItems 로드 실패, 기본값 사용:', portfolioPathPrefix);
 }
 
 // ============================================
@@ -125,6 +142,18 @@ function RoutesAuthPages() {
           <RemoteErrorBoundary remoteName="블로그">
             <Suspense fallback={<RemoteLoadingFallback />}>
               <BlogApp />
+            </Suspense>
+          </RemoteErrorBoundary>
+        }
+      />
+
+      {/* Portfolio Remote App */}
+      <Route
+        path={`${portfolioPathPrefix}/*`}
+        element={
+          <RemoteErrorBoundary remoteName="포트폴리오">
+            <Suspense fallback={<RemoteLoadingFallback />}>
+              <PortfolioApp />
             </Suspense>
           </RemoteErrorBoundary>
         }

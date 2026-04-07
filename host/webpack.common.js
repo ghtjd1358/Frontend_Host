@@ -7,6 +7,7 @@ require('dotenv').config();
 // 환경 변수에서 Remote URL 가져오기
 const REMOTE1_URL = process.env.REMOTE1_URL || 'http://localhost:5001';
 const REMOTE2_URL = process.env.REMOTE2_URL || 'http://localhost:5002';
+const REMOTE3_URL = process.env.REMOTE3_URL || 'http://localhost:5003';
 
 // ============================================
 // 동적 Remote 로더 (KOMCA 패턴)
@@ -145,7 +146,8 @@ module.exports = {
       remotes: {
         // 동적 로더 사용 (Graceful Fallback 포함)
         '@resume': dynamicRemoteLoader('remote1', `${REMOTE1_URL}/remoteEntry.js`),
-        '@blog': dynamicRemoteLoader('blog', `${REMOTE2_URL}/remoteEntry.js`)
+        '@blog': dynamicRemoteLoader('blog', `${REMOTE2_URL}/remoteEntry.js`),
+        '@portfolio': dynamicRemoteLoader('portfolio', `${REMOTE3_URL}/remoteEntry.js`)
       },
       shared: {
         react: { singleton: true, eager: true, requiredVersion: '^19.2.1' },
