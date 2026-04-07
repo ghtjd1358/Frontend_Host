@@ -4,9 +4,15 @@
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
-import { store, ToastProvider, ModalProvider, storage } from '@sonhoseong/mfa-lib';
+import { store, ToastProvider, ModalProvider, storage, initSupabase } from '@sonhoseong/mfa-lib';
 
 storage.setHostApp();
+
+// Supabase 초기화
+initSupabase({
+    supabaseUrl: process.env.REACT_APP_SUPABASE_URL || '',
+    supabaseAnonKey: process.env.REACT_APP_SUPABASE_ANON_KEY || '',
+});
 
 async function start() {
     const container = document.getElementById('root');

@@ -10,12 +10,9 @@ import {
     selectAccessToken,
     setAccessToken,
     useSupabaseInitialize,
-    initSupabase,
     initAxiosFactory,
     getSupabase,
     usePermission,
-    useToast,
-    useModal,
     ErrorBoundary,
     ToastContainer,
     ModalContainer,
@@ -27,12 +24,6 @@ import {
 import { RoutesGuestPages, RoutesAuthPages } from './pages/routes';
 import { lnbItems } from './lnb-items';
 import './App.css';
-
-// Supabase 초기화 (host에서 환경 변수 직접 전달)
-initSupabase({
-    supabaseUrl: process.env.REACT_APP_SUPABASE_URL!,
-    supabaseAnonKey: process.env.REACT_APP_SUPABASE_ANON_KEY!,
-});
 
 // Axios Factory 초기화 (토큰 관리 연결)
 initAxiosFactory({

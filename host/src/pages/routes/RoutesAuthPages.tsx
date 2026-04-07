@@ -45,6 +45,14 @@ const BlogApp = React.lazy(() =>
   }))
 );
 
+// @ts-ignore - 마이페이지 (Host 레벨)
+const MyPage = React.lazy(() =>
+  // @ts-ignore
+  import('@blog/MyPage').catch(() => ({
+    default: () => null
+  }))
+);
+
 // Remote pathPrefix (안전한 로딩) - /container prefix 포함
 let resumePathPrefix = '/container/resume'; // 기본값
 let blogPathPrefix = '/container/blog'; // 기본값
@@ -117,6 +125,18 @@ function RoutesAuthPages() {
           <RemoteErrorBoundary remoteName="블로그">
             <Suspense fallback={<RemoteLoadingFallback />}>
               <BlogApp />
+            </Suspense>
+          </RemoteErrorBoundary>
+        }
+      />
+
+      {/* 마이페이지 (Host 레벨 - /container/user/:userId) */}
+      <Route
+        path="/container/user/:userId"
+        element={
+          <RemoteErrorBoundary remoteName="마이페이지">
+            <Suspense fallback={<RemoteLoadingFallback />}>
+              <MyPage />
             </Suspense>
           </RemoteErrorBoundary>
         }

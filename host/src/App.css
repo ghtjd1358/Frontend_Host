@@ -400,7 +400,7 @@ button {
 
 .main-content {
   min-height: 100vh;
-  padding-top: 60px;
+  padding-top: 0;
   max-width: 1400px;
   margin: 0 auto;
 }
